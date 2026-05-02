@@ -79,48 +79,40 @@ canvas{display:block;touch-action:none;border-radius:12px;
 </div>
 
 <script>
-// ── Cores (como no screenshot: médias, coloridas) ──────────
+// ── Cores (30 cores para muitas cobras) ────────────────────
 const COLORS=[
   '#E8735A','#5AA8E8','#7ED87E','#F0B429','#A07AE8',
   '#5AD8C8','#E89A5A','#5A88D0','#B8E85A','#E85AB0',
-  '#5AE8A0','#D06060','#60A0D0','#D0A060','#8060D0',
+  '#5AE8A0','#C05050','#50A0C8','#C8A050','#8050C8',
+  '#E86080','#60C8A0','#C8C050','#50C8C8','#C86050',
+  '#80A0E8','#E8A080','#80C860','#C860C0','#60A060',
+  '#E860A0','#60C0E8','#A0E860','#E8C060','#9060A0',
 ];
 
-// ── Config por fase ────────────────────────────────────────
-const PHASE_CFG=[
-  null,
-  {R:6, C:6, maxLen:4,  maxSnakes:10}, // 1
-  {R:6, C:7, maxLen:5,  maxSnakes:11}, // 2
-  {R:7, C:7, maxLen:5,  maxSnakes:12}, // 3
-  {R:7, C:8, maxLen:6,  maxSnakes:13}, // 4
-  {R:8, C:8, maxLen:7,  maxSnakes:14}, // 5
-  {R:8, C:9, maxLen:8,  maxSnakes:15}, // 6
-  {R:9, C:9, maxLen:9,  maxSnakes:16}, // 7
-  {R:9, C:10,maxLen:10, maxSnakes:17}, // 8
-  {R:10,C:10,maxLen:12, maxSnakes:18}, // 9
-  {R:10,C:11,maxLen:14, maxSnakes:20}, // 10
-];
+// ── Config por fase: tier muda a cada 5 fases ──────────────
 function cfg(p){
-  if(p<1)p=1;
-  if(p>=PHASE_CFG.length){
-    const last=PHASE_CFG[PHASE_CFG.length-1];
-    return{...last,maxSnakes:Math.min(last.maxSnakes+Math.floor((p-PHASE_CFG.length+1)/2),16)};
-  }
-  return PHASE_CFG[p];
+  if(p<1) p=1;
+  const tier=Math.floor((p-1)/5);  // 0,1,2,3...
+  const pos =(p-1)%5;              // 0-4 dentro do tier
+  const R=Math.min(6+tier*2,12);
+  const C=Math.min(7+tier*2,14);
+  const maxLen=3+tier+Math.floor(pos/2);
+  const maxSnakes=Math.min(10+tier*6+pos, Math.floor(R*C/2.2));
+  return{R,C,maxLen,maxSnakes};
 }
 
-// ── Helpers de grid (só quadrado por enquanto) ─────────────
+// ── Helpers ────────────────────────────────────────────────
 function nbrs(r,c,R,C){
   return[[-1,0],[1,0],[0,-1],[0,1]]
     .map(([dr,dc])=>[r+dr,c+dc])
     .filter(([nr,nc])=>nr>=0&&nr<R&&nc>=0&&nc<C);
 }
-function onBorder(r,c,R,C){return nbrs(r,c,R,C).length<4;}
+function onBorder(r,c,R,C){return r===0||r===R-1||c===0||c===C-1;}
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=0|Math.random()*(i+1);[a[i],a[j]]=[a[j],a[i]];}return a;}
 function key(r,c){return r*1000+c;}
 function center(r,c,cs){return{x:c*cs+cs/2,y:r*cs+cs/2};}
 
-// ── Gerador ────────────────────────────────────────────────
+// ── Walk: parte de qualquer célula, Warnsdorff ─────────────
 function greedyWalk(start,grid,R,C,maxLen){
   const path=[start];
   grid[start[0]][start[1]]=-2;
@@ -128,7 +120,6 @@ function greedyWalk(start,grid,R,C,maxLen){
     const[r,c]=path[path.length-1];
     const free=shuffle(nbrs(r,c,R,C).filter(([nr,nc])=>grid[nr][nc]===-1));
     if(!free.length) break;
-    // Warnsdorff: escolhe célula com menos vizinhos livres
     free.sort((a,b)=>{
       const fa=nbrs(a[0],a[1],R,C).filter(([nr,nc])=>grid[nr][nc]===-1).length;
       const fb=nbrs(b[0],b[1],R,C).filter(([nr,nc])=>grid[nr][nc]===-1).length;
@@ -140,47 +131,62 @@ function greedyWalk(start,grid,R,C,maxLen){
   return path;
 }
 
+// ── Monta cobra: orienta path para que a saída seja na borda
+function buildSnake(path,id,colorPool,grid,R,C){
+  // Precisamos que rail[-1] (cabeça) seja borda para poder sair
+  const p0=path[0], pN=path[path.length-1];
+  let finalPath=null;
+  if(onBorder(pN[0],pN[1],R,C))      finalPath=path;
+  else if(onBorder(p0[0],p0[1],R,C)) finalPath=[...path].reverse();
+  else return null; // nem uma ponta está na borda → descarta
+
+  const n=finalPath.length;
+  const dr=finalPath[n-1][0]-finalPath[n-2][0];
+  const dc=finalPath[n-1][1]-finalPath[n-2][1];
+  const rail=[...finalPath];
+  for(let v=1;v<=n;v++) rail.push([finalPath[n-1][0]+dr*v,finalPath[n-1][1]+dc*v]);
+
+  for(const[r,c] of finalPath) grid[r][c]=id;
+  return{id,color:colorPool[id%colorPool.length],rail,bodyLen:n,headIdx:n-1,exited:false,_anim:null};
+}
+
+// ── Gerador principal ──────────────────────────────────────
 function generateLevel(phase){
   const{R,C,maxLen,maxSnakes}=cfg(phase);
 
-  for(let attempt=0;attempt<40;attempt++){
+  for(let attempt=0;attempt<50;attempt++){
     const grid=Array.from({length:R},()=>Array(C).fill(-1));
     const snakes=[];
-    const colors=shuffle([...COLORS]).slice(0,maxSnakes);
+    const colorPool=shuffle([...COLORS]);
 
-    // Preenche o grid com cobras saindo das bordas
-    const border=[];
-    for(let r=0;r<R;r++) for(let c=0;c<C;c++) if(onBorder(r,c,R,C)) border.push([r,c]);
-    shuffle(border);
+    // Candidatos: borda primeiro, depois interior
+    const border=[], interior=[];
+    for(let r=0;r<R;r++) for(let c=0;c<C;c++)
+      (onBorder(r,c,R,C)?border:interior).push([r,c]);
 
-    for(let id=0;id<maxSnakes;id++){
-      const free=border.filter(([r,c])=>grid[r][c]===-1);
-      if(!free.length) break;
-      const start=free[Math.floor(Math.random()*free.length)];
+    const candidates=[...shuffle(border),...shuffle(interior)];
+
+    for(const start of candidates){
+      if(snakes.length>=maxSnakes) break;
+      if(grid[start[0]][start[1]]!==-1) continue;
 
       const path=greedyWalk(start,grid,R,C,maxLen);
-      if(path.length<2){ for(const[r,c] of path) grid[r][c]=-1; continue; }
+      if(path.length<2){
+        for(const[r,c] of path) grid[r][c]=-1;
+        continue;
+      }
 
-      // marca as células com o id da cobra
-      for(const[r,c] of path) grid[r][c]=id;
-
-      // rail: do fundo em direção à borda (ordem de viagem: tail→head→exit)
-      // path[0]=borda(saída), path[n-1]=fundo(rabo)
-      // rail: reverso do path + células virtuais além da borda
-      const rail=[...path].reverse(); // [fundo, ..., borda]
-      const n=rail.length;
-      const dr=rail[n-1][0]-rail[n-2][0], dc=rail[n-1][1]-rail[n-2][1];
-      const bodyLen=path.length;
-      for(let v=1;v<=bodyLen;v++) rail.push([rail[n-1][0]+dr*v,rail[n-1][1]+dc*v]);
-
-      snakes.push({id,color:colors[id%colors.length],rail,bodyLen,headIdx:bodyLen-1,exited:false,_anim:null});
+      const sn=buildSnake(path,snakes.length,colorPool,grid,R,C);
+      if(!sn){
+        for(const[r,c] of path) grid[r][c]=-1;
+        continue;
+      }
+      snakes.push(sn);
     }
 
-    if(snakes.length<2) continue;
+    if(snakes.length<3) continue;
     if(solvable(snakes,R,C)) return{snakes,R,C,phase};
   }
-
-  // fallback simples
   return fallback(phase);
 }
 
@@ -191,23 +197,18 @@ function fallback(phase){
   const border=[];
   for(let r=0;r<R;r++) for(let c=0;c<C;c++) if(onBorder(r,c,R,C)) border.push([r,c]);
   shuffle(border);
-  for(let id=0;id<3;id++){
-    const free=border.filter(([r,c])=>grid[r][c]===-1);
-    if(!free.length) break;
-    const start=free[0];
-    const path=greedyWalk(start,grid,R,C,5);
+  for(let id=0;id<4&&border.length;id++){
+    const start=border.shift();
+    if(grid[start[0]][start[1]]!==-1) continue;
+    const path=greedyWalk(start,grid,R,C,4);
     if(path.length<2) continue;
-    for(const[r,c] of path) grid[r][c]=id;
-    const rail=[...path].reverse();
-    const n=rail.length,bodyLen=path.length;
-    const dr=rail[n-1][0]-rail[n-2][0],dc=rail[n-1][1]-rail[n-2][1];
-    for(let v=1;v<=bodyLen;v++) rail.push([rail[n-1][0]+dr*v,rail[n-1][1]+dc*v]);
-    snakes.push({id,color:COLORS[id],rail,bodyLen,headIdx:bodyLen-1,exited:false,_anim:null});
+    const sn=buildSnake(path,id,[...COLORS],grid,R,C);
+    if(sn) snakes.push(sn);
   }
   return{snakes,R,C,phase};
 }
 
-// ── Solver BFS ─────────────────────────────────────────────
+// ── Solver: greedy auto-slide — detecta deadlocks face-a-face
 function bodyOf(sn){
   const s=Math.max(0,sn.headIdx-sn.bodyLen+1);
   return sn.rail.slice(s,sn.headIdx+1);
@@ -215,44 +216,37 @@ function bodyOf(sn){
 function inGrid(r,c,R,C){return r>=0&&r<R&&c>=0&&c<C;}
 
 function solvable(snakes,R,C){
+  const n=snakes.length;
+  const heads=snakes.map(s=>s.headIdx);
   const rails=snakes.map(s=>s.rail);
   const bls=snakes.map(s=>s.bodyLen);
-  const n=snakes.length;
-  const initH=snakes.map(s=>s.headIdx);
-  const goal=rails.map(r=>r.length-1);
 
-  function cells(i,heads){
-    const hi=heads[i],bl=bls[i];
-    return rails[i].slice(Math.max(0,hi-bl+1),hi+1).filter(([r,c])=>inGrid(r,c,R,C));
-  }
-  function occ(heads){
+  function occMap(){
     const m=new Map();
     for(let i=0;i<n;i++){
-      if(heads[i]>=rails[i].length) continue;
-      for(const[r,c] of cells(i,heads)) m.set(key(r,c),i);
+      const hi=heads[i];
+      for(let j=Math.max(0,hi-bls[i]+1);j<=hi;j++){
+        const[r,c]=rails[i][j];
+        if(inGrid(r,c,R,C)) m.set(key(r,c),i);
+      }
     }
     return m;
   }
-  const sk=h=>h.join(',');
-  const q=[initH];const vis=new Set([sk(initH)]);
-  while(q.length){
-    const heads=q.shift();
-    if(heads.every((h,i)=>h>=goal[i])) return true;
+
+  // Greedy: repete movimentos enquanto progredir
+  let changed=true, iters=0;
+  while(changed&&iters++<2000){
+    changed=false;
     for(let i=0;i<n;i++){
       if(heads[i]>=rails[i].length-1) continue;
       const ni=heads[i]+1;
       const[nr,nc]=rails[i][ni];
-      const off=!inGrid(nr,nc,R,C);
-      const om=occ(heads);
-      if(off||!om.has(key(nr,nc))||om.get(key(nr,nc))===i){
-        const nh=[...heads];nh[i]=ni;
-        const k=sk(nh);
-        if(!vis.has(k)){vis.add(k);q.push(nh);}
-      }
+      if(!inGrid(nr,nc,R,C)){heads[i]=ni;changed=true;continue;}
+      const om=occMap();
+      if(!om.has(key(nr,nc))||om.get(key(nr,nc))===i){heads[i]=ni;changed=true;}
     }
-    if(vis.size>60000) return true;
   }
-  return false;
+  return heads.every((h,i)=>h>=rails[i].length-1);
 }
 
 // ── Estado do jogo ─────────────────────────────────────────
