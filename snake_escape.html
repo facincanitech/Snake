@@ -7,79 +7,70 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{
-  background:#0f0e17;color:#fff;
+  background:#f0ede8;color:#333;
   font-family:'Segoe UI',Arial,sans-serif;
   height:100dvh;display:flex;flex-direction:column;
-  align-items:center;justify-content:flex-start;
-  overflow:hidden;user-select:none;
+  align-items:center;overflow:hidden;user-select:none;
 }
 #hud{
-  width:100%;max-width:520px;
+  width:100%;max-width:560px;
   display:flex;align-items:center;justify-content:space-between;
-  padding:14px 20px 6px;
+  padding:12px 18px 6px;
 }
-#phase-lbl{font-size:14px;color:#a7a9be;letter-spacing:1px;text-transform:uppercase}
-#phase-lbl b{color:#fff;font-size:17px}
-#timer-col{display:flex;flex-direction:column;align-items:center;gap:4px}
-#timer{font-size:30px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:2px;transition:color .3s}
-#timer.red{color:#e94560;animation:blink .5s infinite alternate}
-@keyframes blink{to{opacity:.4}}
-#tbar-bg{width:90px;height:4px;background:#2a2a4a;border-radius:2px}
-#tbar{height:4px;background:#e94560;border-radius:2px;width:100%;transition:width 1s linear,background .5s}
-#grid-lbl{font-size:13px;color:#a7a9be;text-transform:capitalize;letter-spacing:1px}
+#phase-lbl{font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#888}
+#phase-lbl b{color:#333;font-size:18px}
+#timer-col{display:flex;flex-direction:column;align-items:center;gap:3px}
+#timer{font-size:28px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:2px}
+#timer.red{color:#e74c3c;animation:blink .45s infinite alternate}
+@keyframes blink{to{opacity:.3}}
+#tbar-bg{width:80px;height:3px;background:#ddd;border-radius:2px}
+#tbar{height:3px;background:#e74c3c;border-radius:2px;width:100%;transition:width 1s linear,background .4s}
 #btn-restart{
-  background:transparent;border:2px solid #2a2a4a;color:#a7a9be;
-  border-radius:50%;width:38px;height:38px;font-size:20px;cursor:pointer;
+  background:#fff;border:2px solid #ddd;color:#888;
+  border-radius:50%;width:36px;height:36px;font-size:18px;cursor:pointer;
   display:flex;align-items:center;justify-content:center;
-  transition:all .15s;
+  transition:all .15s;box-shadow:0 1px 4px #0001;
 }
-#btn-restart:hover{background:#2a2a4a;color:#fff;}
-#btn-restart:active{transform:rotate(-30deg) scale(.92);}
-
+#btn-restart:active{transform:rotate(-45deg) scale(.9);}
 #canvas-wrap{
   flex:1;display:flex;align-items:center;justify-content:center;
-  width:100%;padding:8px 14px 10px;
+  width:100%;padding:6px 12px 10px;
 }
-canvas{display:block;touch-action:none;border-radius:14px}
-
-/* overlays */
+canvas{display:block;touch-action:none;border-radius:12px;
+  box-shadow:0 2px 16px #0002;background:#fff;}
 .ov{
-  position:fixed;inset:0;background:#0f0e17cc;backdrop-filter:blur(8px);
+  position:fixed;inset:0;background:#f0ede8cc;backdrop-filter:blur(6px);
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:14px;z-index:9;opacity:0;pointer-events:none;transition:opacity .35s;
+  gap:14px;z-index:9;opacity:0;pointer-events:none;transition:opacity .3s;
 }
 .ov.show{opacity:1;pointer-events:all}
-.ov h2{font-size:38px;font-weight:900}
-.ov p{color:#a7a9be;font-size:15px}
+.ov h2{font-size:36px;font-weight:900;color:#333}
+.ov p{color:#888;font-size:14px}
 .btn{
-  background:#e94560;color:#fff;border:none;border-radius:30px;
-  padding:13px 38px;font-size:16px;font-weight:700;letter-spacing:1px;
-  cursor:pointer;transition:transform .12s,opacity .12s;
+  background:#4ECDC4;color:#fff;border:none;border-radius:30px;
+  padding:12px 36px;font-size:15px;font-weight:700;letter-spacing:1px;
+  cursor:pointer;transition:transform .12s,opacity .12s;box-shadow:0 3px 10px #4ECDC455;
 }
 .btn:active{transform:scale(.94);opacity:.85}
-.btn-ghost{background:transparent;border:1px solid #2a2a4a;color:#a7a9be;margin-top:2px}
-
-/* hint dots — show tap order for tutorial */
+.btn2{background:#fff;color:#888;border:2px solid #ddd;box-shadow:none;margin-top:2px}
 </style>
 </head>
 <body>
-
 <div id="hud">
   <div id="phase-lbl">Fase <b id="pnum">1</b></div>
   <div id="timer-col">
     <div id="timer">2:00</div>
     <div id="tbar-bg"><div id="tbar"></div></div>
   </div>
-  <button id="btn-restart" title="Reiniciar fase">↺</button>
+  <button id="btn-restart">↺</button>
 </div>
-
 <div id="canvas-wrap"><canvas id="c"></canvas></div>
 
 <div id="ov-win" class="ov">
-  <h2>🐍 Escapou!</h2>
+  <h2>🎉 Escapou!</h2>
   <p id="win-msg">Todas as cobras fugiram!</p>
   <button class="btn" id="btn-next">Próxima Fase ▶</button>
-  <button class="btn btn-ghost" id="btn-retry">Jogar Novamente</button>
+  <button class="btn btn2" id="btn-retry">Jogar Novamente</button>
 </div>
 <div id="ov-lose" class="ov">
   <h2>⏱ Tempo!</h2>
@@ -88,162 +79,140 @@ canvas{display:block;touch-action:none;border-radius:14px}
 </div>
 
 <script>
-// ═══════════════════════════════════════════════════════════
-// CONSTANTS
-// ═══════════════════════════════════════════════════════════
-const COLORS = ['#e74c3c','#3498db','#2ecc71','#f39c12','#9b59b6',
-                '#1abc9c','#e67e22','#e91e63','#00bcd4','#ff5722'];
-
-const PHASE_CFG = [
-  null, // index 0 unused
-  {rows:4,cols:4,n:2,bl:[2,2],fl:[2,3],type:'square'},   // 1
-  {rows:4,cols:5,n:2,bl:[3,3],fl:[2,3],type:'square'},   // 2
-  {rows:5,cols:5,n:3,bl:[4,4],fl:[2,3],type:'square'},   // 3
-  {rows:5,cols:6,n:3,bl:[4,5],fl:[2,4],type:'square'},   // 4
-  {rows:6,cols:6,n:4,bl:[5,6],fl:[3,4],type:'square'},   // 5
-  {rows:6,cols:7,n:4,bl:[6,7],fl:[3,5],type:'square'},   // 6
-  {rows:7,cols:7,n:4,bl:[7,8],fl:[3,5],type:'square'},   // 7
-  {rows:7,cols:8,n:5,bl:[8,9],fl:[3,5],type:'square'},   // 8
-  {rows:8,cols:8,n:5,bl:[9,10],fl:[4,6],type:'square'},  // 9
-  {rows:8,cols:9,n:5,bl:[10,12],fl:[4,6],type:'square'}, // 10
+// ── Cores (como no screenshot: médias, coloridas) ──────────
+const COLORS=[
+  '#E8735A','#5AA8E8','#7ED87E','#F0B429','#A07AE8',
+  '#5AD8C8','#E89A5A','#5A88D0','#B8E85A','#E85AB0',
+  '#5AE8A0','#D06060','#60A0D0','#D0A060','#8060D0',
 ];
 
-function cfg(phase){
-  if(phase < 1) phase = 1;
-  if(phase >= PHASE_CFG.length) return {...PHASE_CFG[PHASE_CFG.length-1], n: Math.min(2+Math.floor(phase/3),6)};
-  return PHASE_CFG[phase];
+// ── Config por fase ────────────────────────────────────────
+const PHASE_CFG=[
+  null,
+  {R:6, C:6, maxLen:4,  maxSnakes:10}, // 1
+  {R:6, C:7, maxLen:5,  maxSnakes:11}, // 2
+  {R:7, C:7, maxLen:5,  maxSnakes:12}, // 3
+  {R:7, C:8, maxLen:6,  maxSnakes:13}, // 4
+  {R:8, C:8, maxLen:7,  maxSnakes:14}, // 5
+  {R:8, C:9, maxLen:8,  maxSnakes:15}, // 6
+  {R:9, C:9, maxLen:9,  maxSnakes:16}, // 7
+  {R:9, C:10,maxLen:10, maxSnakes:17}, // 8
+  {R:10,C:10,maxLen:12, maxSnakes:18}, // 9
+  {R:10,C:11,maxLen:14, maxSnakes:20}, // 10
+];
+function cfg(p){
+  if(p<1)p=1;
+  if(p>=PHASE_CFG.length){
+    const last=PHASE_CFG[PHASE_CFG.length-1];
+    return{...last,maxSnakes:Math.min(last.maxSnakes+Math.floor((p-PHASE_CFG.length+1)/2),16)};
+  }
+  return PHASE_CFG[p];
 }
 
-// ═══════════════════════════════════════════════════════════
-// GRID HELPERS
-// ═══════════════════════════════════════════════════════════
-function sqNeighbors(r,c,R,C){
-  return [[-1,0],[1,0],[0,-1],[0,1]]
+// ── Helpers de grid (só quadrado por enquanto) ─────────────
+function nbrs(r,c,R,C){
+  return[[-1,0],[1,0],[0,-1],[0,1]]
     .map(([dr,dc])=>[r+dr,c+dc])
     .filter(([nr,nc])=>nr>=0&&nr<R&&nc>=0&&nc<C);
 }
-function hexNeighbors(r,c,R,C){
-  const dirs=r%2===0?[[-1,-1],[-1,0],[0,-1],[0,1],[1,-1],[1,0]]:[[-1,0],[-1,1],[0,-1],[0,1],[1,0],[1,1]];
-  return dirs.map(([dr,dc])=>[r+dr,c+dc]).filter(([nr,nc])=>nr>=0&&nr<R&&nc>=0&&nc<C);
-}
-function triNeighbors(r,c,R,C){
-  const isUp=(r+c)%2===0;
-  const res=[[r,c-1],[r,c+1]];
-  if(isUp&&r+1<R) res.push([r+1,c]);
-  if(!isUp&&r>0)  res.push([r-1,c]);
-  return res.filter(([nr,nc])=>nc>=0&&nc<C);
-}
-function neighbors(type,r,c,R,C){
-  if(type==='hex') return hexNeighbors(r,c,R,C);
-  if(type==='tri') return triNeighbors(r,c,R,C);
-  return sqNeighbors(r,c,R,C);
-}
-function maxDeg(type){return type==='hex'?6:type==='tri'?3:4;}
-function isBoundary(type,r,c,R,C){return neighbors(type,r,c,R,C).length<maxDeg(type);}
-function allBoundary(type,R,C){
-  const b=[];
-  for(let r=0;r<R;r++) for(let c=0;c<C;c++) if(isBoundary(type,r,c,R,C)) b.push([r,c]);
-  return b;
-}
-
-// ═══════════════════════════════════════════════════════════
-// CELL CENTERS & CANVAS SIZE
-// ═══════════════════════════════════════════════════════════
-function sqCenter(r,c,cs){return{x:c*cs+cs/2,y:r*cs+cs/2};}
-function hexCenter(r,c,cs){
-  const s=cs*0.52,w=s*Math.sqrt(3),h=s*2;
-  return{x:c*w+(r%2)*(w/2)+w/2+2,y:r*h*.75+h/2+2};
-}
-function triCenter(r,c,cs){
-  const h=cs*Math.sqrt(3)/2,isUp=(r+c)%2===0;
-  return{x:c*cs/2+cs/2,y:r*h+(isUp?h*.62:h*.38)};
-}
-function cellCenter(type,r,c,cs){
-  if(type==='hex') return hexCenter(r,c,cs);
-  if(type==='tri') return triCenter(r,c,cs);
-  return sqCenter(r,c,cs);
-}
-function canvasSize(type,R,C,cs){
-  if(type==='hex'){const s=cs*.52,w=s*Math.sqrt(3),h=s*2;return{w:C*w+w/2+4,h:R*h*.75+h/4+4};}
-  if(type==='tri'){const h=cs*Math.sqrt(3)/2;return{w:(C+1)*cs/2+2,h:R*h+h+2};}
-  return{w:C*cs,h:R*cs};
-}
-function drawGrid(ctx,type,R,C,cs){
-  ctx.strokeStyle='rgba(255,255,255,0.07)';ctx.lineWidth=1;
-  if(type==='square'||type==='rect'){
-    for(let r=0;r<=R;r++){ctx.beginPath();ctx.moveTo(0,r*cs);ctx.lineTo(C*cs,r*cs);ctx.stroke();}
-    for(let c=0;c<=C;c++){ctx.beginPath();ctx.moveTo(c*cs,0);ctx.lineTo(c*cs,R*cs);ctx.stroke();}
-  } else if(type==='hex'){
-    const s=cs*.52-1;
-    for(let r=0;r<R;r++) for(let c=0;c<C;c++){
-      const{x,y}=hexCenter(r,c,cs);
-      ctx.beginPath();
-      for(let i=0;i<6;i++){
-        const a=Math.PI/3*i-Math.PI/6;
-        i===0?ctx.moveTo(x+s*Math.cos(a),y+s*Math.sin(a)):ctx.lineTo(x+s*Math.cos(a),y+s*Math.sin(a));
-      }
-      ctx.closePath();ctx.stroke();
-    }
-  } else if(type==='tri'){
-    const h=cs*Math.sqrt(3)/2;
-    for(let r=0;r<R;r++) for(let c=0;c<C;c++){
-      const isUp=(r+c)%2===0,bx=c*cs/2,by=r*h;
-      ctx.beginPath();
-      if(isUp){ctx.moveTo(bx,by+h);ctx.lineTo(bx+cs,by+h);ctx.lineTo(bx+cs/2,by);}
-      else     {ctx.moveTo(bx,by); ctx.lineTo(bx+cs,by);  ctx.lineTo(bx+cs/2,by+h);}
-      ctx.closePath();ctx.stroke();
-    }
-  }
-}
-
-// ═══════════════════════════════════════════════════════════
-// GENERATOR
-// ═══════════════════════════════════════════════════════════
-function rnd(a,b){return a+Math.floor(Math.random()*(b-a+1));}
-function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function onBorder(r,c,R,C){return nbrs(r,c,R,C).length<4;}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=0|Math.random()*(i+1);[a[i],a[j]]=[a[j],a[i]];}return a;}
 function key(r,c){return r*1000+c;}
+function center(r,c,cs){return{x:c*cs+cs/2,y:r*cs+cs/2};}
 
-function randomWalk(start,length,occ,type,R,C){
-  const path=[start],vis=new Set([key(start[0],start[1])]);
-  for(let i=1;i<length;i++){
+// ── Gerador ────────────────────────────────────────────────
+function greedyWalk(start,grid,R,C,maxLen){
+  const path=[start];
+  grid[start[0]][start[1]]=-2;
+  while(path.length<maxLen){
     const[r,c]=path[path.length-1];
-    const nbrs=shuffle(neighbors(type,r,c,R,C).filter(([nr,nc])=>!vis.has(key(nr,nc))&&!occ.has(key(nr,nc))));
-    if(!nbrs.length) break;
-    path.push(nbrs[0]);vis.add(key(nbrs[0][0],nbrs[0][1]));
+    const free=shuffle(nbrs(r,c,R,C).filter(([nr,nc])=>grid[nr][nc]===-1));
+    if(!free.length) break;
+    // Warnsdorff: escolhe célula com menos vizinhos livres
+    free.sort((a,b)=>{
+      const fa=nbrs(a[0],a[1],R,C).filter(([nr,nc])=>grid[nr][nc]===-1).length;
+      const fb=nbrs(b[0],b[1],R,C).filter(([nr,nc])=>grid[nr][nc]===-1).length;
+      return fa-fb;
+    });
+    path.push(free[0]);
+    grid[free[0][0]][free[0][1]]=-2;
   }
   return path;
 }
 
-function buildSnake(id,type,R,C,bodyOcc,bodyLen,futureLen){
-  const boundary=allBoundary(type,R,C);
+function generateLevel(phase){
+  const{R,C,maxLen,maxSnakes}=cfg(phase);
 
-  for(let att=0;att<120;att++){
-    const exits=boundary.filter(([r,c])=>!bodyOcc.has(key(r,c)));
-    if(!exits.length) return null;
-    const exitCell=exits[Math.floor(Math.random()*exits.length)];
+  for(let attempt=0;attempt<40;attempt++){
+    const grid=Array.from({length:R},()=>Array(C).fill(-1));
+    const snakes=[];
+    const colors=shuffle([...COLORS]).slice(0,maxSnakes);
 
-    // Walk inward from exit: gives [exitCell, f1, ..., fN, headPos]
-    const inward=randomWalk(exitCell,futureLen+bodyLen,bodyOcc,type,R,C);
-    if(inward.length<bodyLen+1) continue;
+    // Preenche o grid com cobras saindo das bordas
+    const border=[];
+    for(let r=0;r<R;r++) for(let c=0;c<C;c++) if(onBorder(r,c,R,C)) border.push([r,c]);
+    shuffle(border);
 
-    // Travel order: reverse = [deepTail ... headPos ... exitCell]
-    const rail=[...inward].reverse();
+    for(let id=0;id<maxSnakes;id++){
+      const free=border.filter(([r,c])=>grid[r][c]===-1);
+      if(!free.length) break;
+      const start=free[Math.floor(Math.random()*free.length)];
 
-    // Compute exit direction (for virtual cells past exitCell)
-    const n=rail.length;
-    const dr=rail[n-1][0]-rail[n-2][0],dc=rail[n-1][1]-rail[n-2][1];
-    for(let v=1;v<=bodyLen;v++) rail.push([rail[n-1][0]+dr*v,rail[n-1][1]+dc*v]);
+      const path=greedyWalk(start,grid,R,C,maxLen);
+      if(path.length<2){ for(const[r,c] of path) grid[r][c]=-1; continue; }
 
-    return{id,color:COLORS[id%COLORS.length],rail,bodyLen,headIdx:bodyLen-1,exited:false,_anim:null};
+      // marca as células com o id da cobra
+      for(const[r,c] of path) grid[r][c]=id;
+
+      // rail: do fundo em direção à borda (ordem de viagem: tail→head→exit)
+      // path[0]=borda(saída), path[n-1]=fundo(rabo)
+      // rail: reverso do path + células virtuais além da borda
+      const rail=[...path].reverse(); // [fundo, ..., borda]
+      const n=rail.length;
+      const dr=rail[n-1][0]-rail[n-2][0], dc=rail[n-1][1]-rail[n-2][1];
+      const bodyLen=path.length;
+      for(let v=1;v<=bodyLen;v++) rail.push([rail[n-1][0]+dr*v,rail[n-1][1]+dc*v]);
+
+      snakes.push({id,color:colors[id%colors.length],rail,bodyLen,headIdx:bodyLen-1,exited:false,_anim:null});
+    }
+
+    if(snakes.length<2) continue;
+    if(solvable(snakes,R,C)) return{snakes,R,C,phase};
   }
-  return null;
+
+  // fallback simples
+  return fallback(phase);
 }
 
+function fallback(phase){
+  const{R,C}=cfg(phase);
+  const grid=Array.from({length:R},()=>Array(C).fill(-1));
+  const snakes=[];
+  const border=[];
+  for(let r=0;r<R;r++) for(let c=0;c<C;c++) if(onBorder(r,c,R,C)) border.push([r,c]);
+  shuffle(border);
+  for(let id=0;id<3;id++){
+    const free=border.filter(([r,c])=>grid[r][c]===-1);
+    if(!free.length) break;
+    const start=free[0];
+    const path=greedyWalk(start,grid,R,C,5);
+    if(path.length<2) continue;
+    for(const[r,c] of path) grid[r][c]=id;
+    const rail=[...path].reverse();
+    const n=rail.length,bodyLen=path.length;
+    const dr=rail[n-1][0]-rail[n-2][0],dc=rail[n-1][1]-rail[n-2][1];
+    for(let v=1;v<=bodyLen;v++) rail.push([rail[n-1][0]+dr*v,rail[n-1][1]+dc*v]);
+    snakes.push({id,color:COLORS[id],rail,bodyLen,headIdx:bodyLen-1,exited:false,_anim:null});
+  }
+  return{snakes,R,C,phase};
+}
+
+// ── Solver BFS ─────────────────────────────────────────────
 function bodyOf(sn){
   const s=Math.max(0,sn.headIdx-sn.bodyLen+1);
   return sn.rail.slice(s,sn.headIdx+1);
 }
-function isInGrid(r,c,R,C){return r>=0&&r<R&&c>=0&&c<C;}
+function inGrid(r,c,R,C){return r>=0&&r<R&&c>=0&&c<C;}
 
 function solvable(snakes,R,C){
   const rails=snakes.map(s=>s.rail);
@@ -252,191 +221,99 @@ function solvable(snakes,R,C){
   const initH=snakes.map(s=>s.headIdx);
   const goal=rails.map(r=>r.length-1);
 
-  function bodyOfH(i,heads){
+  function cells(i,heads){
     const hi=heads[i],bl=bls[i];
-    return rails[i].slice(Math.max(0,hi-bl+1),hi+1).filter(([r,c])=>isInGrid(r,c,R,C));
+    return rails[i].slice(Math.max(0,hi-bl+1),hi+1).filter(([r,c])=>inGrid(r,c,R,C));
   }
-  function occMap(heads){
+  function occ(heads){
     const m=new Map();
     for(let i=0;i<n;i++){
       if(heads[i]>=rails[i].length) continue;
-      for(const [r,c] of bodyOfH(i,heads)) m.set(key(r,c),i);
+      for(const[r,c] of cells(i,heads)) m.set(key(r,c),i);
     }
     return m;
   }
-
-  const stateKey=h=>h.join(',');
-  const queue=[initH];
-  const vis=new Set([stateKey(initH)]);
-
-  while(queue.length){
-    const heads=queue.shift();
+  const sk=h=>h.join(',');
+  const q=[initH];const vis=new Set([sk(initH)]);
+  while(q.length){
+    const heads=q.shift();
     if(heads.every((h,i)=>h>=goal[i])) return true;
     for(let i=0;i<n;i++){
       if(heads[i]>=rails[i].length-1) continue;
       const ni=heads[i]+1;
       const[nr,nc]=rails[i][ni];
-      const off=!isInGrid(nr,nc,R,C);
-      const occ=occMap(heads);
-      if(off||!occ.has(key(nr,nc))||occ.get(key(nr,nc))===i){
+      const off=!inGrid(nr,nc,R,C);
+      const om=occ(heads);
+      if(off||!om.has(key(nr,nc))||om.get(key(nr,nc))===i){
         const nh=[...heads];nh[i]=ni;
-        const k=stateKey(nh);
-        if(!vis.has(k)){vis.add(k);queue.push(nh);}
+        const k=sk(nh);
+        if(!vis.has(k)){vis.add(k);q.push(nh);}
       }
     }
-    if(vis.size>80000) return true; // cap: assume solvable
+    if(vis.size>60000) return true;
   }
   return false;
 }
 
-function generateLevel(phase){
-  const c=cfg(phase);
-  const{rows:R,cols:C,n,bl,fl,type}=c;
+// ── Estado do jogo ─────────────────────────────────────────
+const G={canvas:null,ctx:null,snakes:[],R:4,C:4,cs:80,phase:1,
+         timer:120,timerMax:120,timerH:null,win:false,lose:false,
+         flashId:-1,flashFrames:0};
 
-  for(let attempt=0;attempt<60;attempt++){
-    const snakes=[];
-    const bodyOcc=new Set();
-    let ok=true;
-
-    for(let i=0;i<n;i++){
-      const bodyLen=rnd(bl[0],bl[1]);
-      const futureLen=rnd(fl[0],fl[1]);
-      const sn=buildSnake(i,type,R,C,bodyOcc,bodyLen,futureLen);
-      if(!sn){ok=false;break;}
-      snakes.push(sn);
-      for(const[r,c2] of bodyOf(sn)) bodyOcc.add(key(r,c2));
-    }
-
-    if(!ok) continue;
-    if(solvable(snakes,R,C)) return{snakes,rows:R,cols:C,type,phase};
-  }
-
-  // Fallback: 2 snakes no blocking
-  return generateSimple(phase);
-}
-
-function generateSimple(phase){
-  const c=cfg(phase);
-  const{rows:R,cols:C,type}=c;
-  const snakes=[];
-  const occ=new Set();
-  for(let i=0;i<2;i++){
-    const sn=buildSnake(i,type,R,C,occ,2,2);
-    if(sn){snakes.push(sn);for(const[r,c2] of bodyOf(sn)) occ.add(key(r,c2));}
-  }
-  return{snakes,rows:R,cols:C,type,phase};
-}
-
-// ═══════════════════════════════════════════════════════════
-// GAME STATE
-// ═══════════════════════════════════════════════════════════
-// Mapeamento real dos arquivos em assets/Snake/
-const SNAKE_ASSET_DEFS = [
-  { dir: 'Verde',   pfx: 'cobraV' },
-  { dir: 'azul',    pfx: 'cobraA' },
-  { dir: 'laranja', pfx: 'cobraL' },
-  { dir: 'branco',  pfx: 'cobraB' },
-];
-
-function loadImg(src){
-  const img = new Image();
-  img.src = src;
-  return img;
-}
-
-const SNAKE_ASSETS = SNAKE_ASSET_DEFS.map(({ dir, pfx }) => {
-  const base = `assets/Snake/${dir}/`;
-  const hH = loadImg(`${base}${pfx}-horizontal.png`);       // cabeça → direita
-  const hV = loadImg(`${base}${pfx}-vertical.png`);         // cabeça → baixo
-  const mH = loadImg(`${base}${pfx}-corpo-horizontal.png`); // corpo horizontal
-  const mV = loadImg(`${base}${pfx}-corpo-vertical.png`);   // corpo vertical
-  return {
-    headH: hH, headV: hV,
-    midH:  mH, midV:  mV,
-    // tail = corpo (fallback até ter sprite próprio)
-    tailH: mH, tailV: mV,
-    // curvas = corpo (fallback; substitui quando tiver sprites de curva)
-    cDR: mH, cDL: mH, cUR: mH, cUL: mH,
-  };
-});
-
-const G={
-  canvas:null,ctx:null,
-  snakes:[],rows:0,cols:0,type:'square',cs:60,
-  phase:1,
-  timer:120,timerMax:120,timerH:null,
-  win:false,lose:false,
-  flashId:-1,flashFrames:0,
-};
-
-// ═══════════════════════════════════════════════════════════
-// START / LOAD
-// ═══════════════════════════════════════════════════════════
+// ── Iniciar fase ───────────────────────────────────────────
 function startPhase(phase){
   clearInterval(G.timerH);
   hide('ov-win');hide('ov-lose');
+  const lv=generateLevel(phase);
+  G.snakes=lv.snakes;G.R=lv.R;G.C=lv.C;G.phase=phase;
+  G.win=false;G.lose=false;G.flashId=-1;
 
-  const level=generateLevel(phase);
-  G.snakes=level.snakes;
-  G.rows=level.rows;G.cols=level.cols;G.type=level.type;
-  G.phase=phase;G.win=false;G.lose=false;G.flashId=-1;
-
-  // Fit canvas
-  const maxW=Math.min(window.innerWidth-28,520);
-  const maxH=window.innerHeight-130;
-  const BASE=68;
-  const raw=canvasSize(G.type,G.rows,G.cols,BASE);
-  const scale=Math.min(maxW/raw.w,maxH/raw.h,1.5);
-  G.cs=BASE*scale;
-  const sz=canvasSize(G.type,G.rows,G.cols,G.cs);
-  G.canvas.width=sz.w;G.canvas.height=sz.h;
-
+  const maxW=Math.min(window.innerWidth-24,560);
+  const maxH=window.innerHeight-110;
+  G.cs=Math.min(maxW/G.C, maxH/G.R, 72);
+  G.canvas.width=G.C*G.cs;G.canvas.height=G.R*G.cs;
   document.getElementById('pnum').textContent=phase;
-  document.getElementById('grid-lbl').textContent=G.type;
 
   G.timer=120;G.timerMax=120;
-  updateTimerUI();
-  G.timerH=setInterval(tick,1000);
+  updateTimer();
+  G.timerH=setInterval(()=>{
+    if(G.win||G.lose) return;
+    G.timer=Math.max(0,G.timer-1);
+    updateTimer();
+    if(G.timer===0){clearInterval(G.timerH);G.lose=true;show('ov-lose');}
+  },1000);
   render();
 }
 
-function tick(){
-  if(G.win||G.lose) return;
-  G.timer=Math.max(0,G.timer-1);
-  updateTimerUI();
-  if(G.timer===0){clearInterval(G.timerH);G.lose=true;show('ov-lose');}
-}
-function updateTimerUI(){
-  const m=Math.floor(G.timer/60),s=G.timer%60;
+function updateTimer(){
+  const m=0|G.timer/60,s=G.timer%60;
   const el=document.getElementById('timer');
   el.textContent=`${m}:${String(s).padStart(2,'0')}`;
   el.classList.toggle('red',G.timer<=20);
   const bar=document.getElementById('tbar');
   bar.style.width=(G.timer/G.timerMax*100)+'%';
-  bar.style.background=G.timer/G.timerMax>.4?'#e94560':'#ff9f1c';
+  bar.style.background=G.timer/G.timerMax>.4?'#4ECDC4':'#e74c3c';
 }
 
-// ═══════════════════════════════════════════════════════════
-// INPUT
-// ═══════════════════════════════════════════════════════════
+// ── Input ──────────────────────────────────────────────────
 function onTap(e){
   e.preventDefault();
   if(G.win||G.lose) return;
   const rect=G.canvas.getBoundingClientRect();
-  const sx=G.canvas.width/rect.width,sy=G.canvas.height/rect.height;
-  const touch=e.touches?e.touches[0]:e;
-  const px=(touch.clientX-rect.left)*sx,py=(touch.clientY-rect.top)*sy;
+  const t=e.touches?e.touches[0]:e;
+  const px=(t.clientX-rect.left)*G.canvas.width/rect.width;
+  const py=(t.clientY-rect.top)*G.canvas.height/rect.height;
 
   let minD=Infinity,hit=null;
   for(const sn of G.snakes){
     if(sn.exited) continue;
     for(const[r,c] of bodyOf(sn)){
-      const pt=cellCenter(G.type,r,c,G.cs);
-      const d=Math.hypot(pt.x-px,pt.y-py);
+      const p=center(r,c,G.cs);
+      const d=Math.hypot(p.x-px,p.y-py);
       if(d<minD){minD=d;hit=sn;}
     }
   }
-  if(hit&&minD<G.cs*.8) tryMove(hit);
+  if(hit&&minD<G.cs*.75) tryMove(hit);
 }
 
 function occMap(){
@@ -452,244 +329,146 @@ function tryMove(sn){
   if(sn._anim) return;
   const ni=sn.headIdx+1;
   if(ni>=sn.rail.length){sn.exited=true;checkWin();render();return;}
-
   const[nr,nc]=sn.rail[ni];
-  const off=!isInGrid(nr,nc,G.rows,G.cols);
-  const occ=occMap();
-  const k=key(nr,nc);
-
-  if(!off&&occ.has(k)&&occ.get(k)!==sn.id){
-    flash(sn.id);return;
-  }
-
-  animateStep(sn,ni);
+  const off=!inGrid(nr,nc,G.R,G.C);
+  const om=occMap();
+  if(!off&&om.has(key(nr,nc))&&om.get(key(nr,nc))!==sn.id){flash(sn.id);return;}
+  animStep(sn,ni);
 }
 
-function animateStep(sn,ni){
-  const FRAMES=7;
-  const from=ptOf(sn.rail[sn.headIdx]);
-  const to=ptOf(sn.rail[ni]);
-  let f=0;
-  sn._anim={from,to,t:0};
-
-  function frame(){
-    f++;
-    sn._anim.t=ease(f/FRAMES);
-    render();
-    if(f<FRAMES){requestAnimationFrame(frame);}
+function animStep(sn,ni){
+  const F=6;
+  const from=pt(sn.rail[sn.headIdx]),to=pt(sn.rail[ni]);
+  let f=0;sn._anim={from,to,t:0};
+  (function frame(){
+    f++;sn._anim.t=1-Math.pow(1-f/F,3);render();
+    if(f<F) requestAnimationFrame(frame);
     else{
-      sn._anim=null;
-      sn.headIdx=ni;
-      // Auto-continue if still exiting off-grid
-      if(sn.headIdx>=sn.rail.length-1){sn.exited=true;checkWin();}
-      render();
+      sn._anim=null;sn.headIdx=ni;
+      if(sn.headIdx>=sn.rail.length-1){sn.exited=true;checkWin();render();}
+      else tryMove(sn); // auto-slide: continua até sair ou ser bloqueada
     }
-  }
-  requestAnimationFrame(frame);
+  })();
 }
-
-function ptOf([r,c]){return cellCenter(G.type,r,c,G.cs);}
-function ease(t){return 1-Math.pow(1-t,3);}
+function pt([r,c]){return center(r,c,G.cs);}
 
 function flash(id){
-  G.flashId=id;G.flashFrames=12;
-  function fr(){
-    G.flashFrames--;render();
-    if(G.flashFrames>0) requestAnimationFrame(fr);
-    else G.flashId=-1;
-  }
-  requestAnimationFrame(fr);
+  G.flashId=id;G.flashFrames=10;
+  (function fr(){G.flashFrames--;render();if(G.flashFrames>0) requestAnimationFrame(fr);else G.flashId=-1;})();
 }
-
 function checkWin(){
   if(G.snakes.every(s=>s.exited)){
     clearInterval(G.timerH);G.win=true;
     const t=G.timer;
     document.getElementById('win-msg').textContent=
-      `Todas escaparam! Sobrou ${Math.floor(t/60)}:${String(t%60).padStart(2,'0')} `;
-    setTimeout(()=>show('ov-win'),500);
+      `Todas escaparam! ⏱ ${0|t/60}:${String(t%60).padStart(2,'0')}`;
+    setTimeout(()=>show('ov-win'),450);
   }
 }
 
-// ═══════════════════════════════════════════════════════════
-// RENDERER
-// ═══════════════════════════════════════════════════════════
+// ── Renderer ───────────────────────────────────────────────
 function render(){
-  const{ctx,canvas,type,rows,cols,cs}=G;
+  const{ctx,canvas,cs,R,C}=G;
   ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.fillStyle='#12111e';ctx.fillRect(0,0,canvas.width,canvas.height);
-  drawGrid(ctx,type,rows,cols,cs);
-  for(const sn of G.snakes) if(!sn.exited) drawRail(sn);
+
+  // fundo branco
+  ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  // grid sutil
+  ctx.strokeStyle='#ebebeb';ctx.lineWidth=1;
+  for(let r=0;r<=R;r++){ctx.beginPath();ctx.moveTo(0,r*cs);ctx.lineTo(C*cs,r*cs);ctx.stroke();}
+  for(let c=0;c<=C;c++){ctx.beginPath();ctx.moveTo(c*cs,0);ctx.lineTo(c*cs,R*cs);ctx.stroke();}
+
   for(const sn of G.snakes) if(!sn.exited) drawSnake(sn);
 }
 
-function drawRail(sn){
-  const{ctx,type,cs}=G;
-  const pts=sn.rail.filter(([r,c])=>isInGrid(r,c,G.rows,G.cols)).map(([r,c])=>cellCenter(type,r,c,cs));
+function drawSnake(sn){
+  const{ctx,cs}=G;
+  const cells=bodyOf(sn);
+  if(!cells.length) return;
+
+  const isFlash=G.flashId===sn.id&&G.flashFrames%2===0;
+  const col=isFlash?'#e74c3c':sn.color;
+  const r=cs*.30;
+
+  // pontos (cabeça interpolada se animando)
+  const pts=cells.map(([row,c])=>center(row,c,cs));
+  if(sn._anim){
+    const{from,to,t}=sn._anim;
+    pts[pts.length-1]={x:from.x+(to.x-from.x)*t,y:from.y+(to.y-from.y)*t};
+  }
+
+  // sombra leve
+  ctx.strokeStyle='rgba(0,0,0,0.10)';ctx.lineWidth=r*2+8;
+  ctx.lineCap='round';ctx.lineJoin='round';
+  path(ctx,pts);
+
+  // corpo
+  ctx.strokeStyle=col;ctx.lineWidth=r*2;
+  path(ctx,pts);
+
+  // brilho (linha clara no topo)
+  ctx.strokeStyle='rgba(255,255,255,0.40)';ctx.lineWidth=r*.7;
+  path(ctx,pts);
+
+  // rabo arredondado
+  ctx.fillStyle=col;
+  ctx.beginPath();ctx.arc(pts[0].x,pts[0].y,r,0,Math.PI*2);ctx.fill();
+
+  // cabeça
+  const head=pts[pts.length-1];
+  let dx=1,dy=0;
+  if(pts.length>1){dx=head.x-pts[pts.length-2].x;dy=head.y-pts[pts.length-2].y;}
+  else if(sn.headIdx>0){
+    const p=center(sn.rail[sn.headIdx-1][0],sn.rail[sn.headIdx-1][1],cs);
+    dx=head.x-p.x;dy=head.y-p.y;
+  }
+  const dl=Math.hypot(dx,dy)||1;dx/=dl;dy/=dl;
+  const nx=-dy,ny=dx;
+
+  ctx.fillStyle=col;
+  ctx.beginPath();ctx.arc(head.x,head.y,r*1.12,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,0.4)';
+  ctx.beginPath();ctx.arc(head.x,head.y,r*1.12,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=col;
+  ctx.beginPath();ctx.arc(head.x,head.y,r,0,Math.PI*2);ctx.fill();
+
+  // olhos
+  eye(ctx,head.x+nx*r*.44,head.y+ny*r*.44,r*.28,dx,dy);
+  eye(ctx,head.x-nx*r*.44,head.y-ny*r*.44,r*.28,dx,dy);
+}
+
+function path(ctx,pts){
   if(pts.length<2) return;
-  ctx.strokeStyle=sn.color+'22';ctx.lineWidth=cs*.22;ctx.lineCap='round';ctx.lineJoin='round';
   ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);
   for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i].x,pts[i].y);
   ctx.stroke();
 }
 
-function drawSnake(sn){
-  const{ctx,type,cs}=G;
-  let cells=bodyOf(sn);
-  if(cells.length<1) return;
-  const isFlash=G.flashId===sn.id&&Math.floor(G.flashFrames/2)%2===0;
-  const assets = SNAKE_ASSETS[sn.id % SNAKE_ASSETS.length];
-
-  const pts=cells.map(([row,c])=>cellCenter(type,row,c,cs));
-  let headPt = pts[pts.length-1];
-  let ni = null;
-  if(sn._anim){
-    const{from,to,t}=sn._anim;
-    headPt={x:from.x+(to.x-from.x)*t,y:from.y+(to.y-from.y)*t};
-    ni = sn.rail[sn.headIdx + 1];
-  }
-
-  // Layer 1: Stretched meio if animating
-  if (sn._anim && cells.length > 0) {
-    const from = pts[pts.length-1];
-    const dx = headPt.x - from.x;
-    const dy = headPt.y - from.y;
-    const dist = Math.hypot(dx, dy);
-    if (dist > 0.1) {
-      ctx.save();
-      ctx.translate((from.x + headPt.x)/2, (from.y + headPt.y)/2);
-      if (Math.abs(dx) < 0.1) {
-        ctx.drawImage(assets.midV, -cs/2, -dist/2, cs, dist);
-      } else {
-        const angle = Math.atan2(dy, dx);
-        ctx.rotate(angle);
-        ctx.drawImage(assets.midH, -dist/2, -cs/2, dist, cs);
-      }
-      ctx.restore();
-    }
-  }
-
-  // Layer 2: Grid tiles
-  for(let i=0; i<cells.length; i++){
-    const pt = pts[i];
-    const r = cells[i][0], c = cells[i][1];
-    const isHeadCell = (i === cells.length - 1);
-    
-    const actAsHead = isHeadCell && !sn._anim;
-    const actAsTail = (i === 0);
-    
-    let img = null;
-    let scaleX = 1, scaleY = 1;
-
-    if (actAsHead) {
-      const prev = cells.length > 1 ? cells[i-1] : (sn.headIdx > 0 ? sn.rail[sn.headIdx-1] : [r, c-1]);
-      const dr = r - prev[0], dc = c - prev[1];
-      if (dc === 1) { img = assets.headH; }
-      else if (dc === -1) { img = assets.headH; scaleX = -1; }
-      else if (dr === 1) { img = assets.headV; }
-      else if (dr === -1) { img = assets.headV; scaleY = -1; }
-      else { img = assets.headH; }
-    } else if (actAsTail) {
-      const next = cells.length > 1 ? cells[i+1] : (sn._anim ? ni : null);
-      if (!next) continue;
-      const dr = next[0] - r, dc = next[1] - c;
-      if (dc === 1) { img = assets.tailH; } 
-      else if (dc === -1) { img = assets.tailH; scaleX = -1; }
-      else if (dr === 1) { img = assets.tailV; } 
-      else if (dr === -1) { img = assets.tailV; scaleY = -1; }
-      else { img = assets.tailH; }
-    } else {
-      // Mid or Curve
-      const prev = i > 0 ? cells[i-1] : sn.rail[sn.headIdx - cells.length];
-      const next = isHeadCell ? ni : cells[i+1];
-      if (!prev || !next) continue;
-      
-      const v_in = [r - prev[0], c - prev[1]];
-      const v_out = [next[0] - r, next[1] - c];
-      
-      if (v_in[0] === v_out[0] && v_in[1] === v_out[1]) {
-        if (v_in[0] === 0) img = assets.midH;
-        else img = assets.midV;
-      } else {
-        img = getCurve(v_in, v_out, assets);
-      }
-    }
-
-    if (img) {
-      ctx.save();
-      ctx.translate(pt.x, pt.y);
-      if (scaleX === -1 || scaleY === -1) ctx.scale(scaleX, scaleY);
-      // Small overlap trick: draw slightly larger than cs to hide microscopic gaps between tiles
-      ctx.drawImage(img, -cs/2, -cs/2, cs, cs);
-      ctx.restore();
-    }
-  }
-
-  // Layer 3: Animated Head
-  if (sn._anim) {
-    const fromCell = cells[cells.length-1];
-    const dr = ni[0] - fromCell[0], dc = ni[1] - fromCell[1];
-    let img = assets.headH, scaleX = 1, scaleY = 1;
-    if (dc === 1) { img = assets.headH; }
-    else if (dc === -1) { img = assets.headH; scaleX = -1; }
-    else if (dr === 1) { img = assets.headV; }
-    else if (dr === -1) { img = assets.headV; scaleY = -1; }
-    
-    ctx.save();
-    ctx.translate(headPt.x, headPt.y);
-    if (isFlash) {
-      ctx.fillStyle = 'rgba(255, 0, 0, 0.6)';
-      ctx.beginPath(); ctx.arc(0, 0, cs*0.6, 0, Math.PI*2); ctx.fill();
-    }
-    if (scaleX === -1 || scaleY === -1) ctx.scale(scaleX, scaleY);
-    ctx.drawImage(img, -cs/2, -cs/2, cs, cs);
-    ctx.restore();
-  } else if (isFlash) {
-    ctx.save();
-    ctx.translate(headPt.x, headPt.y);
-    ctx.fillStyle = 'rgba(255, 0, 0, 0.6)';
-    ctx.beginPath(); ctx.arc(0, 0, cs*0.6, 0, Math.PI*2); ctx.fill();
-    ctx.restore();
-  }
-}
-
-function getCurve(v_in, v_out, assets) {
-  const in_r = v_in[0], in_c = v_in[1];
-  const out_r = v_out[0], out_c = v_out[1];
-  if ((in_c===1 && out_r===1) || (in_r===-1 && out_c===-1)) return assets.cDL;
-  if ((in_c===1 && out_r===-1) || (in_r===1 && out_c===-1)) return assets.cUL;
-  if ((in_c===-1 && out_r===1) || (in_r===-1 && out_c===1)) return assets.cDR;
-  if ((in_c===-1 && out_r===-1) || (in_r===1 && out_c===1)) return assets.cUR;
-  return assets.midH;
-}
-
 function eye(ctx,x,y,r,dx,dy){
-  // fallback unused now
+  ctx.fillStyle='#fff';
+  ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#333';
+  ctx.beginPath();ctx.arc(x+dx*r*.3,y+dy*r*.3,r*.5,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,.7)';
+  ctx.beginPath();ctx.arc(x-r*.1,y-r*.1,r*.2,0,Math.PI*2);ctx.fill();
 }
 
-// ═══════════════════════════════════════════════════════════
-// OVERLAY HELPERS
-// ═══════════════════════════════════════════════════════════
+// ── Utils ──────────────────────────────────────────────────
 function show(id){document.getElementById(id).classList.add('show');}
 function hide(id){document.getElementById(id).classList.remove('show');}
 
-// ═══════════════════════════════════════════════════════════
-// BOOT
-// ═══════════════════════════════════════════════════════════
+// ── Boot ───────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded',()=>{
   G.canvas=document.getElementById('c');
   G.ctx=G.canvas.getContext('2d');
-
   G.canvas.addEventListener('click',onTap);
   G.canvas.addEventListener('touchstart',onTap,{passive:false});
-
   document.getElementById('btn-next')   .addEventListener('click',()=>startPhase(G.phase+1));
   document.getElementById('btn-retry')  .addEventListener('click',()=>startPhase(G.phase));
   document.getElementById('btn-retry2') .addEventListener('click',()=>startPhase(G.phase));
   document.getElementById('btn-restart').addEventListener('click',()=>startPhase(G.phase));
-
   window.addEventListener('resize',()=>startPhase(G.phase));
-
   startPhase(1);
 });
 </script>
