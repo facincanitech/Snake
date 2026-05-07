@@ -14,7 +14,7 @@ Jogo de puzzle no estilo "Snake Escape": cobras deslizam por trilhos e precisam 
 - Clique numa cobra → ela desliza célula por célula até sair da grade ou ser bloqueada por outra
 - Se bloqueada: para e pisca em vermelho
 - Enquanto uma cobra está em movimento, nenhum outro input é aceito (`G.sliding`)
-- Objetivo: fazer todas as cobras escaparem antes do tempo acabar (2 minutos)
+- Objetivo: fazer todas as cobras escaparem antes do tempo acabar (2 minutos) 
 
 ### Gerador de níveis (JS, client-side)
 - `buildSnake()`: cria uma cobra com um trilho (rail) que vai do interior da grade até a borda
