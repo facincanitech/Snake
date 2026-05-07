@@ -91,27 +91,57 @@ canvas{display:block;touch-action:none;border-radius:14px}
 // ═══════════════════════════════════════════════════════════
 // CONSTANTS
 // ═══════════════════════════════════════════════════════════
-const COLORS = ['#e74c3c','#3498db','#2ecc71','#f39c12','#9b59b6',
-                '#1abc9c','#e67e22','#e91e63','#00bcd4','#ff5722'];
+const COLORS = [
+  '#e74c3c','#3498db','#2ecc71','#f39c12','#9b59b6',
+  '#1abc9c','#e67e22','#e91e63','#00bcd4','#ff5722',
+  '#cddc39','#795548','#607d8b','#ff4081','#69f0ae',
+  '#40c4ff','#ffd740','#ff6d00','#d500f9','#00e676',
+];
 
 const PHASE_CFG = [
-  null, // index 0 unused
-  {rows:4,cols:4,n:2,bl:[2,2],fl:[2,3],type:'square'},   // 1
-  {rows:4,cols:5,n:2,bl:[3,3],fl:[2,3],type:'square'},   // 2
-  {rows:5,cols:5,n:3,bl:[4,4],fl:[2,3],type:'square'},   // 3
-  {rows:5,cols:6,n:3,bl:[4,5],fl:[2,4],type:'square'},   // 4
-  {rows:6,cols:6,n:4,bl:[5,6],fl:[3,4],type:'square'},   // 5
-  {rows:6,cols:7,n:4,bl:[6,7],fl:[3,5],type:'square'},   // 6
-  {rows:7,cols:7,n:4,bl:[7,8],fl:[3,5],type:'square'},   // 7
-  {rows:7,cols:8,n:5,bl:[8,9],fl:[3,5],type:'square'},   // 8
-  {rows:8,cols:8,n:5,bl:[9,10],fl:[4,6],type:'square'},  // 9
-  {rows:8,cols:9,n:5,bl:[10,12],fl:[4,6],type:'square'}, // 10
+  null,
+  // ── Square (fases 1-15) ──────────────────────────────────
+  {rows:4, cols:4,  n:2,  bl:[2,3], fl:[2,3], type:'square'}, // 1
+  {rows:4, cols:5,  n:2,  bl:[3,3], fl:[2,3], type:'square'}, // 2
+  {rows:5, cols:5,  n:3,  bl:[3,4], fl:[2,3], type:'square'}, // 3
+  {rows:5, cols:6,  n:3,  bl:[4,4], fl:[2,4], type:'square'}, // 4
+  {rows:6, cols:6,  n:4,  bl:[4,5], fl:[3,4], type:'square'}, // 5
+  {rows:6, cols:7,  n:5,  bl:[4,5], fl:[3,4], type:'square'}, // 6
+  {rows:7, cols:7,  n:6,  bl:[4,6], fl:[3,5], type:'square'}, // 7
+  {rows:8, cols:8,  n:7,  bl:[4,6], fl:[3,5], type:'square'}, // 8
+  {rows:8, cols:9,  n:8,  bl:[5,7], fl:[3,5], type:'square'}, // 9
+  {rows:9, cols:9,  n:10, bl:[5,7], fl:[3,5], type:'square'}, // 10
+  {rows:10,cols:10, n:12, bl:[5,8], fl:[3,5], type:'square'}, // 11
+  {rows:10,cols:10, n:14, bl:[5,8], fl:[3,6], type:'square'}, // 12
+  {rows:11,cols:11, n:16, bl:[5,8], fl:[3,6], type:'square'}, // 13
+  {rows:12,cols:12, n:18, bl:[5,9], fl:[4,6], type:'square'}, // 14
+  {rows:13,cols:12, n:20, bl:[5,9], fl:[4,6], type:'square'}, // 15
+  // ── Hexagonal (fases 16-30, cobra se move em 6 direções) ─
+  {rows:8, cols:8,  n:14, bl:[3,4], fl:[2,3], type:'hex'},    // 16
+  {rows:8, cols:9,  n:16, bl:[3,4], fl:[2,3], type:'hex'},    // 17
+  {rows:9, cols:9,  n:18, bl:[3,5], fl:[2,4], type:'hex'},    // 18
+  {rows:9, cols:10, n:20, bl:[3,5], fl:[2,4], type:'hex'},    // 19
+  {rows:10,cols:10, n:22, bl:[3,5], fl:[3,4], type:'hex'},    // 20
+  {rows:10,cols:11, n:25, bl:[3,5], fl:[3,4], type:'hex'},    // 21
+  {rows:11,cols:11, n:28, bl:[3,5], fl:[2,4], type:'hex'},    // 22
+  {rows:12,cols:12, n:30, bl:[3,4], fl:[2,3], type:'hex'},    // 23
+  {rows:13,cols:12, n:32, bl:[3,4], fl:[2,3], type:'hex'},    // 24
+  {rows:13,cols:13, n:35, bl:[2,4], fl:[2,3], type:'hex'},    // 25
+  {rows:14,cols:13, n:38, bl:[2,4], fl:[2,3], type:'hex'},    // 26
+  {rows:14,cols:14, n:40, bl:[2,3], fl:[2,3], type:'hex'},    // 27
+  {rows:15,cols:15, n:42, bl:[2,3], fl:[2,3], type:'hex'},    // 28
+  {rows:15,cols:16, n:46, bl:[2,3], fl:[2,3], type:'hex'},    // 29
+  {rows:16,cols:16, n:50, bl:[2,3], fl:[2,3], type:'hex'},    // 30
 ];
 
 function cfg(phase){
-  if(phase < 1) phase = 1;
-  if(phase >= PHASE_CFG.length) return {...PHASE_CFG[PHASE_CFG.length-1], n: Math.min(2+Math.floor(phase/3),6)};
-  return PHASE_CFG[phase];
+  if(phase<1) phase=1;
+  if(phase<PHASE_CFG.length) return PHASE_CFG[phase];
+  // Dinâmico além da fase 30: hex crescendo
+  const e=phase-30;
+  const n=Math.min(50+e*3,120);
+  const side=Math.min(16+Math.floor(e/4),22);
+  return{rows:side,cols:side,n,bl:[2,3],fl:[2,3],type:'hex'};
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -284,7 +314,7 @@ function solvable(snakes,R,C){
         if(!vis.has(k)){vis.add(k);queue.push(nh);}
       }
     }
-    if(vis.size>80000) return true; // cap: assume solvable
+    if(snakes.length>8||vis.size>120000) return true; // BFS inviável para muitas cobras
   }
   return false;
 }
@@ -338,6 +368,7 @@ const G={
   timer:120,timerMax:120,timerH:null,
   win:false,lose:false,
   flashId:-1,flashFrames:0,
+  sliding:false, // true enquanto uma cobra está deslizando
 };
 
 // ═══════════════════════════════════════════════════════════
@@ -352,13 +383,15 @@ function startPhase(phase){
   G.rows=level.rows;G.cols=level.cols;G.type=level.type;
   G.phase=phase;G.win=false;G.lose=false;G.flashId=-1;
 
-  // Fit canvas
+  G.sliding=false;
+
+  // Fit canvas (mínimo 16px por célula para manter legibilidade)
   const maxW=Math.min(window.innerWidth-28,520);
   const maxH=window.innerHeight-130;
-  const BASE=68;
+  const BASE=68,MIN_CS=16;
   const raw=canvasSize(G.type,G.rows,G.cols,BASE);
   const scale=Math.min(maxW/raw.w,maxH/raw.h,1.5);
-  G.cs=BASE*scale;
+  G.cs=Math.max(MIN_CS,BASE*scale);
   const sz=canvasSize(G.type,G.rows,G.cols,G.cs);
   G.canvas.width=sz.w;G.canvas.height=sz.h;
 
@@ -392,7 +425,7 @@ function updateTimerUI(){
 // ═══════════════════════════════════════════════════════════
 function onTap(e){
   e.preventDefault();
-  if(G.win||G.lose) return;
+  if(G.win||G.lose||G.sliding) return;
   const rect=G.canvas.getBoundingClientRect();
   const sx=G.canvas.width/rect.width,sy=G.canvas.height/rect.height;
   const touch=e.touches?e.touches[0]:e;
@@ -407,7 +440,7 @@ function onTap(e){
       if(d<minD){minD=d;hit=sn;}
     }
   }
-  if(hit&&minD<G.cs*.8) tryMove(hit);
+  if(hit&&minD<G.cs*.8){G.sliding=true;slideAll(hit);}
 }
 
 function occMap(){
@@ -419,10 +452,13 @@ function occMap(){
   return m;
 }
 
-function tryMove(sn){
-  if(sn._anim) return;
+// Desliza a cobra até sair ou bater em outra
+function slideAll(sn){
+  if(sn.exited){G.sliding=false;return;}
   const ni=sn.headIdx+1;
-  if(ni>=sn.rail.length){sn.exited=true;checkWin();render();return;}
+  if(ni>=sn.rail.length){
+    sn.exited=true;G.sliding=false;checkWin();render();return;
+  }
 
   const[nr,nc]=sn.rail[ni];
   const off=!isInGrid(nr,nc,G.rows,G.cols);
@@ -430,14 +466,17 @@ function tryMove(sn){
   const k=key(nr,nc);
 
   if(!off&&occ.has(k)&&occ.get(k)!==sn.id){
-    flash(sn.id);return;
+    // Bloqueada por outra cobra
+    G.sliding=false;
+    flash(sn.id);
+    return;
   }
 
-  animateStep(sn,ni);
+  animateStep(sn,ni,()=>slideAll(sn));
 }
 
-function animateStep(sn,ni){
-  const FRAMES=7;
+function animateStep(sn,ni,onDone){
+  const FRAMES=6;
   const from=ptOf(sn.rail[sn.headIdx]);
   const to=ptOf(sn.rail[ni]);
   let f=0;
@@ -447,13 +486,13 @@ function animateStep(sn,ni){
     f++;
     sn._anim.t=ease(f/FRAMES);
     render();
-    if(f<FRAMES){requestAnimationFrame(frame);}
-    else{
+    if(f<FRAMES){
+      requestAnimationFrame(frame);
+    } else {
       sn._anim=null;
       sn.headIdx=ni;
-      // Auto-continue if still exiting off-grid
-      if(sn.headIdx>=sn.rail.length-1){sn.exited=true;checkWin();}
       render();
+      if(onDone) onDone();
     }
   }
   requestAnimationFrame(frame);
