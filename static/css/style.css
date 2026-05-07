@@ -1,0 +1,193 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #0f0e17;
+  --panel: #1a1a2e;
+  --accent: #e94560;
+  --text: #fffffe;
+  --subtext: #a7a9be;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Segoe UI', Arial, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ── HUD ─────────────────────────────── */
+#hud {
+  width: 100%;
+  max-width: 540px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px 6px;
+}
+
+#level-badge {
+  background: var(--panel);
+  border: 1px solid #2a2a4a;
+  border-radius: 20px;
+  padding: 4px 14px;
+  font-size: 13px;
+  color: var(--subtext);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+#level-badge span {
+  color: var(--text);
+  font-weight: 700;
+}
+
+#timer-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#timer {
+  font-size: 28px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 2px;
+  transition: color 0.3s;
+}
+
+#timer.urgent { color: var(--accent); animation: pulse 0.5s infinite alternate; }
+
+@keyframes pulse { from { opacity: 1 } to { opacity: 0.5 } }
+
+#timer-bar-wrap {
+  width: 80px;
+  height: 3px;
+  background: #2a2a4a;
+  border-radius: 2px;
+  margin-top: 3px;
+}
+
+#timer-bar {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  width: 100%;
+  transition: width 1s linear, background 0.3s;
+}
+
+#grid-badge {
+  background: var(--panel);
+  border: 1px solid #2a2a4a;
+  border-radius: 20px;
+  padding: 4px 14px;
+  font-size: 13px;
+  color: var(--subtext);
+  text-transform: capitalize;
+}
+
+/* ── Canvas wrapper ────────────────────── */
+#canvas-wrap {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 8px 16px;
+}
+
+canvas {
+  display: block;
+  touch-action: none;
+  border-radius: 16px;
+  background: #ffffff0d;
+  box-shadow: 0 8px 32px #00000055;
+}
+
+/* ── Overlays ──────────────────────────── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: #0f0e17cc;
+  backdrop-filter: blur(6px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  gap: 16px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+.overlay.visible {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.overlay h2 {
+  font-size: 36px;
+  font-weight: 800;
+}
+
+.overlay p { color: var(--subtext); font-size: 15px; }
+
+.btn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 30px;
+  padding: 12px 36px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: transform 0.15s, opacity 0.15s;
+}
+
+.btn:active { transform: scale(0.96); opacity: 0.85; }
+
+.btn-ghost {
+  background: transparent;
+  border: 1px solid #2a2a4a;
+  color: var(--subtext);
+}
+
+/* ── Difficulty selector ───────────────── */
+#diff-wrap {
+  width: 100%;
+  max-width: 540px;
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  padding: 0 16px 10px;
+}
+
+.diff-btn {
+  flex: 1;
+  background: var(--panel);
+  border: 1px solid #2a2a4a;
+  border-radius: 8px;
+  color: var(--subtext);
+  font-size: 12px;
+  padding: 5px 2px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.diff-btn.active, .diff-btn:hover {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+/* ── Snake blocked flash (done via canvas recolor) ── */

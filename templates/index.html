@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Snake Escape</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+<!-- ── HUD ─────────────────────────────────────────────── -->
+<div id="hud">
+  <div id="level-badge">Fase <span id="level-num">1</span></div>
+  <div id="timer-wrap">
+    <div id="timer">2:00</div>
+    <div id="timer-bar-wrap"><div id="timer-bar"></div></div>
+  </div>
+  <div id="grid-badge">square</div>
+</div>
+
+<!-- ── Difficulty ──────────────────────────────────────── -->
+<div id="diff-wrap">
+  <button class="diff-btn active" data-d="1">1</button>
+  <button class="diff-btn" data-d="2">2</button>
+  <button class="diff-btn" data-d="3">3</button>
+  <button class="diff-btn" data-d="4">4</button>
+  <button class="diff-btn" data-d="5">5</button>
+  <button class="diff-btn" data-d="6">6</button>
+  <button class="diff-btn" data-d="7">7</button>
+</div>
+
+<!-- ── Canvas ──────────────────────────────────────────── -->
+<div id="canvas-wrap">
+  <canvas id="gameCanvas"></canvas>
+</div>
+
+<!-- ── Win overlay ─────────────────────────────────────── -->
+<div id="overlay-win" class="overlay">
+  <h2>🐍 Escapou!</h2>
+  <p>Todas as cobras fugiram</p>
+  <button class="btn" id="btn-next">Próxima Fase</button>
+  <button class="btn btn-ghost" id="btn-retry">Jogar Novamente</button>
+</div>
+
+<!-- ── Lose overlay ────────────────────────────────────── -->
+<div id="overlay-lose" class="overlay">
+  <h2>⏱ Tempo!</h2>
+  <p>As cobras ficaram presas</p>
+  <button class="btn" id="btn-retry2">Tentar Novamente</button>
+</div>
+
+<script type="module">
+  import { init } from '/static/js/game.js';
+  window.addEventListener('DOMContentLoaded', () => {
+    init(document.getElementById('gameCanvas'));
+  });
+</script>
+
+</body>
+</html>

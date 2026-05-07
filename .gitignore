@@ -8,12 +8,6 @@ __pycache__/
 dist/
 build/
 
-# Flask / backend (não vai pro GitHub Pages)
-app.py
-generator.py
-templates/
-static/
-
 # Claude Code (configurações locais da ferramenta)
 .claude/
 
