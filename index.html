@@ -363,7 +363,7 @@ function startPhase(phase){
   G.canvas.width=sz.w;G.canvas.height=sz.h;
 
   document.getElementById('pnum').textContent=phase;
-  document.getElementById('grid-lbl').textContent=G.type;
+  const glbl=document.getElementById('grid-lbl');if(glbl) glbl.textContent=G.type;
 
   G.timer=120;G.timerMax=120;
   updateTimerUI();
@@ -506,136 +506,57 @@ function drawRail(sn){
 
 function drawSnake(sn){
   const{ctx,type,cs}=G;
-  let cells=bodyOf(sn);
-  if(cells.length<1) return;
-  const isFlash=G.flashId===sn.id&&Math.floor(G.flashFrames/2)%2===0;
-  const assets = SNAKE_ASSETS[sn.id % SNAKE_ASSETS.length];
+  const cells=bodyOf(sn);
+  if(!cells.length) return;
+
+  const r=cs*0.28;
+  const isFlash=G.flashId===sn.id&&G.flashFrames%2===0;
+  const color=isFlash?'#ff4444':sn.color;
 
   const pts=cells.map(([row,c])=>cellCenter(type,row,c,cs));
-  let headPt = pts[pts.length-1];
-  let ni = null;
   if(sn._anim){
     const{from,to,t}=sn._anim;
-    headPt={x:from.x+(to.x-from.x)*t,y:from.y+(to.y-from.y)*t};
-    ni = sn.rail[sn.headIdx + 1];
+    pts[pts.length-1]={x:from.x+(to.x-from.x)*t,y:from.y+(to.y-from.y)*t};
   }
 
-  // Layer 1: Stretched meio if animating
-  if (sn._anim && cells.length > 0) {
-    const from = pts[pts.length-1];
-    const dx = headPt.x - from.x;
-    const dy = headPt.y - from.y;
-    const dist = Math.hypot(dx, dy);
-    if (dist > 0.1) {
-      ctx.save();
-      ctx.translate((from.x + headPt.x)/2, (from.y + headPt.y)/2);
-      if (Math.abs(dx) < 0.1) {
-        ctx.drawImage(assets.midV, -cs/2, -dist/2, cs, dist);
-      } else {
-        const angle = Math.atan2(dy, dx);
-        ctx.rotate(angle);
-        ctx.drawImage(assets.midH, -dist/2, -cs/2, dist, cs);
-      }
-      ctx.restore();
-    }
-  }
+  // Outline
+  ctx.strokeStyle='rgba(0,0,0,0.35)';
+  ctx.lineWidth=r*2+5;ctx.lineCap='round';ctx.lineJoin='round';
+  drawPath(ctx,pts);
 
-  // Layer 2: Grid tiles
-  for(let i=0; i<cells.length; i++){
-    const pt = pts[i];
-    const r = cells[i][0], c = cells[i][1];
-    const isHeadCell = (i === cells.length - 1);
-    
-    const actAsHead = isHeadCell && !sn._anim;
-    const actAsTail = (i === 0);
-    
-    let img = null;
-    let scaleX = 1, scaleY = 1;
+  // Body
+  ctx.strokeStyle=color;ctx.lineWidth=r*2;
+  drawPath(ctx,pts);
 
-    if (actAsHead) {
-      const prev = cells.length > 1 ? cells[i-1] : (sn.headIdx > 0 ? sn.rail[sn.headIdx-1] : [r, c-1]);
-      const dr = r - prev[0], dc = c - prev[1];
-      if (dc === 1) { img = assets.headH; }
-      else if (dc === -1) { img = assets.headH; scaleX = -1; }
-      else if (dr === 1) { img = assets.headV; }
-      else if (dr === -1) { img = assets.headV; scaleY = -1; }
-      else { img = assets.headH; }
-    } else if (actAsTail) {
-      const next = cells.length > 1 ? cells[i+1] : (sn._anim ? ni : null);
-      if (!next) continue;
-      const dr = next[0] - r, dc = next[1] - c;
-      if (dc === 1) { img = assets.tailH; } 
-      else if (dc === -1) { img = assets.tailH; scaleX = -1; }
-      else if (dr === 1) { img = assets.tailV; } 
-      else if (dr === -1) { img = assets.tailV; scaleY = -1; }
-      else { img = assets.tailH; }
-    } else {
-      // Mid or Curve
-      const prev = i > 0 ? cells[i-1] : sn.rail[sn.headIdx - cells.length];
-      const next = isHeadCell ? ni : cells[i+1];
-      if (!prev || !next) continue;
-      
-      const v_in = [r - prev[0], c - prev[1]];
-      const v_out = [next[0] - r, next[1] - c];
-      
-      if (v_in[0] === v_out[0] && v_in[1] === v_out[1]) {
-        if (v_in[0] === 0) img = assets.midH;
-        else img = assets.midV;
-      } else {
-        img = getCurve(v_in, v_out, assets);
-      }
-    }
+  // Head circle
+  const head=pts[pts.length-1];
+  ctx.fillStyle=color;
+  ctx.beginPath();ctx.arc(head.x,head.y,r*1.25,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='rgba(0,0,0,0.3)';ctx.lineWidth=2;ctx.stroke();
 
-    if (img) {
-      ctx.save();
-      ctx.translate(pt.x, pt.y);
-      if (scaleX === -1 || scaleY === -1) ctx.scale(scaleX, scaleY);
-      // Small overlap trick: draw slightly larger than cs to hide microscopic gaps between tiles
-      ctx.drawImage(img, -cs/2, -cs/2, cs, cs);
-      ctx.restore();
-    }
-  }
-
-  // Layer 3: Animated Head
-  if (sn._anim) {
-    const fromCell = cells[cells.length-1];
-    const dr = ni[0] - fromCell[0], dc = ni[1] - fromCell[1];
-    let img = assets.headH, scaleX = 1, scaleY = 1;
-    if (dc === 1) { img = assets.headH; }
-    else if (dc === -1) { img = assets.headH; scaleX = -1; }
-    else if (dr === 1) { img = assets.headV; }
-    else if (dr === -1) { img = assets.headV; scaleY = -1; }
-    
-    ctx.save();
-    ctx.translate(headPt.x, headPt.y);
-    if (isFlash) {
-      ctx.fillStyle = 'rgba(255, 0, 0, 0.6)';
-      ctx.beginPath(); ctx.arc(0, 0, cs*0.6, 0, Math.PI*2); ctx.fill();
-    }
-    if (scaleX === -1 || scaleY === -1) ctx.scale(scaleX, scaleY);
-    ctx.drawImage(img, -cs/2, -cs/2, cs, cs);
-    ctx.restore();
-  } else if (isFlash) {
-    ctx.save();
-    ctx.translate(headPt.x, headPt.y);
-    ctx.fillStyle = 'rgba(255, 0, 0, 0.6)';
-    ctx.beginPath(); ctx.arc(0, 0, cs*0.6, 0, Math.PI*2); ctx.fill();
-    ctx.restore();
-  }
+  // Eyes
+  const dir=pts.length>1
+    ?{x:head.x-pts[pts.length-2].x,y:head.y-pts[pts.length-2].y}
+    :{x:1,y:0};
+  const dl=Math.hypot(dir.x,dir.y)||1;
+  const nx=-dir.y/dl,ny=dir.x/dl;
+  drawEye(ctx,head.x+nx*r*.45,head.y+ny*r*.45,r*.28);
+  drawEye(ctx,head.x-nx*r*.45,head.y-ny*r*.45,r*.28);
 }
 
-function getCurve(v_in, v_out, assets) {
-  const in_r = v_in[0], in_c = v_in[1];
-  const out_r = v_out[0], out_c = v_out[1];
-  if ((in_c===1 && out_r===1) || (in_r===-1 && out_c===-1)) return assets.cDL;
-  if ((in_c===1 && out_r===-1) || (in_r===1 && out_c===-1)) return assets.cUL;
-  if ((in_c===-1 && out_r===1) || (in_r===-1 && out_c===1)) return assets.cDR;
-  if ((in_c===-1 && out_r===-1) || (in_r===1 && out_c===1)) return assets.cUR;
-  return assets.midH;
+function drawPath(ctx,pts){
+  ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);
+  for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i].x,pts[i].y);
+  ctx.stroke();
 }
 
-function eye(ctx,x,y,r,dx,dy){
-  // fallback unused now
+function drawEye(ctx,x,y,r){
+  ctx.fillStyle='#fff';
+  ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#222';
+  ctx.beginPath();ctx.arc(x+r*.15,y+r*.1,r*.5,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#fff';
+  ctx.beginPath();ctx.arc(x+r*.05,y-r*.1,r*.18,0,Math.PI*2);ctx.fill();
 }
 
 // ═══════════════════════════════════════════════════════════
