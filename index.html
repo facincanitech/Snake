@@ -27,14 +27,17 @@ body{
 #tbar-bg{width:90px;height:4px;background:#2a2a4a;border-radius:2px}
 #tbar{height:4px;background:#e94560;border-radius:2px;width:100%;transition:width 1s linear,background .5s}
 #grid-lbl{font-size:13px;color:#a7a9be;text-transform:capitalize;letter-spacing:1px}
-#btn-restart{
+.hud-btns{display:flex;gap:6px;align-items:center;}
+.hud-btn{
   background:transparent;border:2px solid #2a2a4a;color:#a7a9be;
-  border-radius:50%;width:38px;height:38px;font-size:20px;cursor:pointer;
+  border-radius:50%;width:38px;height:38px;font-size:18px;cursor:pointer;
   display:flex;align-items:center;justify-content:center;
   transition:all .15s;
 }
-#btn-restart:hover{background:#2a2a4a;color:#fff;}
+.hud-btn:hover{background:#2a2a4a;color:#fff;}
+.hud-btn:active{transform:scale(.92);}
 #btn-restart:active{transform:rotate(-30deg) scale(.92);}
+#btn-hint.on{background:#f39c12;border-color:#f39c12;color:#fff;}
 
 #canvas-wrap{
   flex:1;display:flex;align-items:center;justify-content:center;
@@ -58,8 +61,7 @@ canvas{display:block;touch-action:none;border-radius:14px}
 }
 .btn:active{transform:scale(.94);opacity:.85}
 .btn-ghost{background:transparent;border:1px solid #2a2a4a;color:#a7a9be;margin-top:2px}
-
-/* hint dots — show tap order for tutorial */
+#stars{font-size:36px;letter-spacing:6px;}
 </style>
 </head>
 <body>
@@ -70,12 +72,17 @@ canvas{display:block;touch-action:none;border-radius:14px}
     <div id="timer">2:00</div>
     <div id="tbar-bg"><div id="tbar"></div></div>
   </div>
-  <button id="btn-restart" title="Reiniciar fase">↺</button>
+  <div class="hud-btns">
+    <button id="btn-hint"    class="hud-btn" title="Dica">💡</button>
+    <button id="btn-undo"    class="hud-btn" title="Desfazer">↩</button>
+    <button id="btn-restart" class="hud-btn" title="Reiniciar">↺</button>
+  </div>
 </div>
 
 <div id="canvas-wrap"><canvas id="c"></canvas></div>
 
 <div id="ov-win" class="ov">
+  <div id="stars">★★★</div>
   <h2>🐍 Escapou!</h2>
   <p id="win-msg">Todas as cobras fugiram!</p>
   <button class="btn" id="btn-next">Próxima Fase ▶</button>
@@ -199,7 +206,8 @@ function canvasSize(type,R,C,cs){
   return{w:C*cs,h:R*cs};
 }
 function drawGrid(ctx,type,R,C,cs){
-  ctx.strokeStyle='rgba(255,255,255,0.07)';ctx.lineWidth=1;
+  ctx.strokeStyle=type==='hex'?'rgba(100,255,100,0.07)':'rgba(255,255,255,0.07)';
+  ctx.lineWidth=1;
   if(type==='square'||type==='rect'){
     for(let r=0;r<=R;r++){ctx.beginPath();ctx.moveTo(0,r*cs);ctx.lineTo(C*cs,r*cs);ctx.stroke();}
     for(let c=0;c<=C;c++){ctx.beginPath();ctx.moveTo(c*cs,0);ctx.lineTo(c*cs,R*cs);ctx.stroke();}
@@ -338,7 +346,21 @@ function generateLevel(phase){
     }
 
     if(!ok) continue;
-    if(solvable(snakes,R,C)) return{snakes,rows:R,cols:C,type,phase};
+    if(solvable(snakes,R,C)){
+      // A partir de 3 cobras exige pelo menos 1 bloqueio (puzzle real)
+      if(n>=3){
+        const occ=occMap(snakes);
+        const hasBlock=snakes.some(sn=>{
+          const ni=sn.headIdx+1;
+          if(ni>=sn.rail.length) return false;
+          const[nr,nc]=sn.rail[ni];
+          if(!isInGrid(nr,nc,R,C)) return false;
+          return occ.has(key(nr,nc))&&occ.get(key(nr,nc))!==sn.id;
+        });
+        if(!hasBlock) continue;
+      }
+      return{snakes,rows:R,cols:C,type,phase};
+    }
   }
 
   // Fallback: 2 snakes no blocking
@@ -368,7 +390,11 @@ const G={
   timer:120,timerMax:120,timerH:null,
   win:false,lose:false,
   flashId:-1,flashFrames:0,
-  sliding:false, // true enquanto uma cobra está deslizando
+  sliding:false,
+  history:[],      // pilha de snapshots para undo
+  showHint:false,
+  particles:[],
+  animLoop:false,  // RAF loop unificado para hints + partículas
 };
 
 // ═══════════════════════════════════════════════════════════
@@ -384,6 +410,9 @@ function startPhase(phase){
   G.phase=phase;G.win=false;G.lose=false;G.flashId=-1;
 
   G.sliding=false;
+  G.history=[];G.showHint=false;G.particles=[];G.animLoop=false;
+  document.getElementById('btn-hint').classList.remove('on');
+  document.body.style.background=G.type==='hex'?'#0b150b':'#0f0e17';
 
   // Fit canvas (mínimo 16px por célula para manter legibilidade)
   const maxW=Math.min(window.innerWidth-28,520);
@@ -440,12 +469,18 @@ function onTap(e){
       if(d<minD){minD=d;hit=sn;}
     }
   }
-  if(hit&&minD<G.cs*.8){G.sliding=true;slideAll(hit);}
+  if(hit&&minD<G.cs*.8){
+    G.history.push(G.snakes.map(sn=>({id:sn.id,headIdx:sn.headIdx,exited:sn.exited})));
+    G.showHint=false;
+    document.getElementById('btn-hint').classList.remove('on');
+    G.sliding=true;
+    slideAll(hit);
+  }
 }
 
-function occMap(){
+function occMap(arr){
   const m=new Map();
-  for(const sn of G.snakes){
+  for(const sn of (arr||G.snakes)){
     if(sn.exited) continue;
     for(const[r,c] of bodyOf(sn)) m.set(key(r,c),sn.id);
   }
@@ -457,7 +492,10 @@ function slideAll(sn){
   if(sn.exited){G.sliding=false;return;}
   const ni=sn.headIdx+1;
   if(ni>=sn.rail.length){
-    sn.exited=true;G.sliding=false;checkWin();render();return;
+    sn.exited=true;G.sliding=false;
+    const last=sn.rail.slice().reverse().find(([r,c])=>isInGrid(r,c,G.rows,G.cols));
+    if(last){const ep=ptOf(last);emitParticles(ep.x,ep.y,sn.color);}
+    checkWin();render();return;
   }
 
   const[nr,nc]=sn.rail[ni];
@@ -513,12 +551,119 @@ function flash(id){
 
 function checkWin(){
   if(G.snakes.every(s=>s.exited)){
-    clearInterval(G.timerH);G.win=true;
+    clearInterval(G.timerH);G.win=true;G.showHint=false;
     const t=G.timer;
+    const s=getStars(t,G.timerMax);
+    document.getElementById('stars').textContent='★'.repeat(s)+'☆'.repeat(3-s);
     document.getElementById('win-msg').textContent=
-      `Todas escaparam! Sobrou ${Math.floor(t/60)}:${String(t%60).padStart(2,'0')} `;
+      `Todas escaparam! Sobrou ${Math.floor(t/60)}:${String(t%60).padStart(2,'0')}`;
     setTimeout(()=>show('ov-win'),500);
   }
+}
+
+// ── Estrelas ───────────────────────────────────────────────
+function getStars(t,max){
+  if(t>max*.75) return 3;
+  if(t>max*.33) return 2;
+  return 1;
+}
+
+// ── Undo ───────────────────────────────────────────────────
+function undo(){
+  if(G.sliding||!G.history.length) return;
+  const snap=G.history.pop();
+  for(const s of snap){
+    const sn=G.snakes.find(x=>x.id===s.id);
+    if(sn){sn.headIdx=s.headIdx;sn.exited=s.exited;sn._anim=null;}
+  }
+  G.win=false;
+  render();
+}
+
+// ── Hint ───────────────────────────────────────────────────
+function toggleHint(){
+  G.showHint=!G.showHint;
+  document.getElementById('btn-hint').classList.toggle('on',G.showHint);
+  if(G.showHint) ensureAnimLoop();
+  else render();
+}
+
+function getUnblockedSnakes(){
+  const occ=occMap();
+  return G.snakes.filter(sn=>{
+    if(sn.exited) return false;
+    const ni=sn.headIdx+1;
+    if(ni>=sn.rail.length) return true;
+    const[nr,nc]=sn.rail[ni];
+    if(!isInGrid(nr,nc,G.rows,G.cols)) return true;
+    return !occ.has(key(nr,nc))||occ.get(key(nr,nc))===sn.id;
+  });
+}
+
+function drawHintGlow(sn){
+  const{ctx,type,cs}=G;
+  const cells=bodyOf(sn);
+  if(!cells.length) return;
+  const head=cellCenter(type,cells[cells.length-1][0],cells[cells.length-1][1],cs);
+  const pulse=0.5+0.5*Math.sin(Date.now()/220);
+  ctx.save();
+  // Anel pulsante ao redor da cabeça
+  ctx.strokeStyle=sn.color;
+  ctx.lineWidth=3;
+  ctx.globalAlpha=(0.4+0.5*pulse);
+  ctx.beginPath();ctx.arc(head.x,head.y,cs*.6,0,Math.PI*2);ctx.stroke();
+  // Rail à frente iluminado
+  const ahead=sn.rail.slice(sn.headIdx).filter(([r,c])=>isInGrid(r,c,G.rows,G.cols))
+    .map(([r,c])=>cellCenter(type,r,c,cs));
+  if(ahead.length>1){
+    ctx.strokeStyle=sn.color;
+    ctx.lineWidth=cs*.18;ctx.lineCap='round';ctx.lineJoin='round';
+    ctx.globalAlpha=0.25+0.2*pulse;
+    ctx.beginPath();ctx.moveTo(ahead[0].x,ahead[0].y);
+    for(let i=1;i<ahead.length;i++) ctx.lineTo(ahead[i].x,ahead[i].y);
+    ctx.stroke();
+  }
+  ctx.globalAlpha=1;
+  ctx.restore();
+}
+
+// ── Partículas ─────────────────────────────────────────────
+function emitParticles(x,y,color){
+  for(let i=0;i<18;i++){
+    const a=Math.random()*Math.PI*2;
+    const spd=1.5+Math.random()*4;
+    G.particles.push({x,y,vx:Math.cos(a)*spd,vy:Math.sin(a)*spd-1.5,color,life:1,r:2+Math.random()*5});
+  }
+  ensureAnimLoop();
+}
+
+function updateParticles(){
+  for(let i=G.particles.length-1;i>=0;i--){
+    const p=G.particles[i];
+    p.x+=p.vx;p.y+=p.vy;p.vy+=0.18;p.life-=0.032;
+    if(p.life<=0) G.particles.splice(i,1);
+  }
+}
+
+function drawParticles(ctx){
+  for(const p of G.particles){
+    ctx.globalAlpha=p.life*p.life;
+    ctx.fillStyle=p.color;
+    ctx.beginPath();ctx.arc(p.x,p.y,p.r*p.life,0,Math.PI*2);ctx.fill();
+  }
+  ctx.globalAlpha=1;
+}
+
+// RAF loop unificado (hints + partículas)
+function ensureAnimLoop(){
+  if(G.animLoop) return;
+  G.animLoop=true;
+  (function loop(){
+    const active=(G.showHint&&!G.win&&!G.lose)||G.particles.length>0;
+    if(!active){G.animLoop=false;return;}
+    render();
+    requestAnimationFrame(loop);
+  })();
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -527,10 +672,14 @@ function checkWin(){
 function render(){
   const{ctx,canvas,type,rows,cols,cs}=G;
   ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.fillStyle='#12111e';ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle=type==='hex'?'#0b1a0b':'#12111e';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
   drawGrid(ctx,type,rows,cols,cs);
   for(const sn of G.snakes) if(!sn.exited) drawRail(sn);
+  if(G.showHint) for(const sn of getUnblockedSnakes()) drawHintGlow(sn);
   for(const sn of G.snakes) if(!sn.exited) drawSnake(sn);
+  updateParticles();
+  drawParticles(ctx);
 }
 
 function drawRail(sn){
@@ -618,6 +767,8 @@ window.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('btn-retry')  .addEventListener('click',()=>startPhase(G.phase));
   document.getElementById('btn-retry2') .addEventListener('click',()=>startPhase(G.phase));
   document.getElementById('btn-restart').addEventListener('click',()=>startPhase(G.phase));
+  document.getElementById('btn-hint')   .addEventListener('click',toggleHint);
+  document.getElementById('btn-undo')   .addEventListener('click',undo);
 
   window.addEventListener('resize',()=>startPhase(G.phase));
 
