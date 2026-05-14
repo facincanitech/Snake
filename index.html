@@ -301,7 +301,26 @@ canvas{display:block;touch-action:none;border-radius:18px;box-shadow:0 8px 40px 
 }
 .game-banner:active{transform:scale(.97);}
 .gb-escape{background:linear-gradient(135deg,#1e1b4b,#2e1065);border-color:#6366f1;--glow:#6366f155;animation:pcPulse 3s ease-in-out infinite;}
-.gb-classic{background:linear-gradient(135deg,#064e3b,#065040);border-color:#10b981;--glow:#10b98155;animation:pcPulse 3s ease-in-out infinite;}
+.event-card{
+  border-radius:20px;overflow:hidden;cursor:pointer;
+  border:1.5px solid #10b98155;
+  background:linear-gradient(135deg,#064e3b,#065040);
+  transition:transform .12s,box-shadow .2s;
+}
+.event-card:active{transform:scale(.97);}
+.ev-badge{
+  background:#10b981;color:#fff;
+  font-size:10px;font-weight:900;letter-spacing:2px;
+  text-align:center;padding:5px;
+  text-transform:uppercase;
+}
+.ev-body{display:flex;align-items:center;gap:16px;padding:16px 20px;}
+.ev-icon{font-size:36px;flex-shrink:0;}
+.ev-info{flex:1;}
+.ev-name{font-size:18px;font-weight:900;margin-bottom:3px;}
+.ev-desc{font-size:12px;color:#9090b8;font-weight:700;}
+.hb-event-active{opacity:1!important;color:#10b981!important;}
+.hb-event-active .hb-icon{filter:drop-shadow(0 0 6px #10b981);}
 .gb-icon{font-size:44px;flex-shrink:0;}
 .gb-info{flex:1;}
 .gb-name{font-size:22px;font-weight:900;margin-bottom:4px;}
@@ -411,7 +430,7 @@ canvas{display:block;touch-action:none;border-radius:18px;box-shadow:0 8px 40px 
     <button class="hotbar-btn" id="hb-home"><div class="hb-icon">🏠</div><div class="hb-label">Início</div></button>
     <button class="hotbar-btn" style="opacity:1"><div class="hb-icon">🗺️</div><div class="hb-label">Fases</div></button>
     <button class="hotbar-btn"><div class="hb-icon">🛒</div><div class="hb-label">Loja</div></button>
-    <button class="hotbar-btn"><div class="hb-icon">🎪</div><div class="hb-label">Eventos</div></button>
+    <button class="hotbar-btn hb-event-active" id="hb-events"><div class="hb-icon">🎪</div><div class="hb-label">Eventos</div></button>
   </div>
 </div>
 
@@ -422,25 +441,28 @@ canvas{display:block;touch-action:none;border-radius:18px;box-shadow:0 8px 40px 
     <div id="home-coins-disp">🪙 <span id="home-coins-val">0</span></div>
   </div>
   <div id="home-hero">
-    <div class="hh-emoji">🎮</div>
-    <p>Escolha seu jogo</p>
+    <div class="hh-emoji">🧩</div>
+    <p>Puzzle · Fuja pelo labirinto</p>
   </div>
   <div id="home-games">
     <div class="game-banner gb-escape" id="banner-escape">
-      <div class="gb-icon">🧩</div>
+      <div class="gb-icon">🐍</div>
       <div class="gb-info">
         <div class="gb-name">Snake Escape</div>
-        <div class="gb-desc">Fuja pelo labirinto · Puzzle</div>
+        <div class="gb-desc">Clique numa cobra e ela desliza até escapar</div>
       </div>
       <div class="gb-arrow">▶</div>
     </div>
-    <div class="game-banner gb-classic" id="banner-classic">
-      <div class="gb-icon">🍎</div>
-      <div class="gb-info">
-        <div class="gb-name">Snake</div>
-        <div class="gb-desc">Come frutinhas · Arcade</div>
+    <div id="home-event-card" class="event-card">
+      <div class="ev-badge">🎪 EVENTO ATIVO</div>
+      <div class="ev-body">
+        <div class="ev-icon">🍎</div>
+        <div class="ev-info">
+          <div class="ev-name">Snake Clássico</div>
+          <div class="ev-desc">Come frutinhas · Portais · Fases</div>
+        </div>
+        <div class="gb-arrow">▶</div>
       </div>
-      <div class="gb-arrow">▶</div>
     </div>
   </div>
 </div>
@@ -1763,7 +1785,8 @@ window.addEventListener('DOMContentLoaded',()=>{
 
   // Home screen
   document.getElementById('banner-escape').addEventListener('click',showMap);
-  document.getElementById('banner-classic').addEventListener('click',startClassic);
+  document.getElementById('home-event-card').addEventListener('click',startClassic);
+  document.getElementById('hb-events').addEventListener('click',startClassic);
 
   // Classic snake controls
   document.getElementById('cs-back').addEventListener('click',showHome);
