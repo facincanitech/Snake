@@ -499,27 +499,28 @@ function cfg(phase){
   const block=Math.floor((phase-1)/TYPE_BLOCK);
   const pos=(phase-1)%TYPE_BLOCK;       // 0-99 within block
   const t=pos/(TYPE_BLOCK-1);           // 0.0 → 1.0
-  const tc=Math.pow(t,0.4);            // ramps steeply early, keeps growing to 100
+  const tc=Math.sqrt(t);               // sqrt curve ≈ n scales linearly with phase
   const type=GRID_TYPES[block%GRID_TYPES.length];
 
+  // Each block targets ~2 snakes at phase 1 → ~100 at phase 100
   let rows,cols;
   if(type==='tri'){
-    cols=Math.round(lerp(8,32,tc));
-    rows=Math.round(lerp(4,16,tc));
+    cols=Math.round(lerp(8,36,tc));
+    rows=Math.round(lerp(4,22,tc));
   } else if(type==='ring'){
-    rows=Math.round(lerp(3,9,tc));    // number of rings
-    cols=Math.round(lerp(8,30,tc));   // sectors per ring
+    rows=Math.round(lerp(3,16,tc));   // rings
+    cols=Math.round(lerp(8,50,tc));   // sectors
   } else if(type==='hex'){
-    cols=Math.round(lerp(4,20,tc));
-    rows=Math.round(lerp(3,16,tc));
+    cols=Math.round(lerp(4,28,tc));
+    rows=Math.round(lerp(3,28,tc));
   } else { // square, oct
-    cols=Math.round(lerp(4,22,tc));
-    rows=Math.round(lerp(4,20,tc));
+    cols=Math.round(lerp(4,30,tc));
+    rows=Math.round(lerp(4,26,tc));
   }
 
   const area=rows*cols;
-  const density=lerp(0.15,0.60,tc);
-  const avgBody=lerp(2.5,7,tc);
+  const density=lerp(0.12,0.70,tc);
+  const avgBody=lerp(2.5,5.5,tc);
   const n=Math.max(2,Math.round(area*density/avgBody));
   const blMax=Math.round(lerp(3,10,tc));
   const flMax=Math.round(lerp(2,6,tc));
