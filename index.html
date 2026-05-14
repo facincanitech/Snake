@@ -499,29 +499,30 @@ function cfg(phase){
   const block=Math.floor((phase-1)/TYPE_BLOCK);
   const pos=(phase-1)%TYPE_BLOCK;       // 0-99 within block
   const t=pos/(TYPE_BLOCK-1);           // 0.0 → 1.0
+  const tc=Math.pow(t,0.4);            // ramps steeply early, keeps growing to 100
   const type=GRID_TYPES[block%GRID_TYPES.length];
 
   let rows,cols;
   if(type==='tri'){
-    cols=Math.round(lerp(10,30,t));
-    rows=Math.round(lerp(5,15,t));
+    cols=Math.round(lerp(8,32,tc));
+    rows=Math.round(lerp(4,16,tc));
   } else if(type==='ring'){
-    rows=Math.round(lerp(3,8,t));   // number of rings
-    cols=Math.round(lerp(10,28,t)); // sectors per ring
+    rows=Math.round(lerp(3,9,tc));    // number of rings
+    cols=Math.round(lerp(8,30,tc));   // sectors per ring
   } else if(type==='hex'){
-    cols=Math.round(lerp(5,18,t));
-    rows=Math.round(lerp(4,15,t));
+    cols=Math.round(lerp(4,20,tc));
+    rows=Math.round(lerp(3,16,tc));
   } else { // square, oct
-    cols=Math.round(lerp(4,20,t));
-    rows=Math.round(lerp(4,18,t));
+    cols=Math.round(lerp(4,22,tc));
+    rows=Math.round(lerp(4,20,tc));
   }
 
   const area=rows*cols;
-  const density=lerp(0.08,0.50,t);
-  const avgBody=lerp(2.5,6,t);
+  const density=lerp(0.15,0.60,tc);
+  const avgBody=lerp(2.5,7,tc);
   const n=Math.max(2,Math.round(area*density/avgBody));
-  const blMax=Math.round(lerp(3,9,t));
-  const flMax=Math.round(lerp(2,5,t));
+  const blMax=Math.round(lerp(3,10,tc));
+  const flMax=Math.round(lerp(2,6,tc));
   return{rows,cols,n,bl:[2,Math.max(2,blMax)],fl:[2,Math.max(2,flMax)],type};
 }
 
