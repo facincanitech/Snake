@@ -4,144 +4,198 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 <title>Snake Escape</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{
-  background:#0f0e17;color:#fff;
-  font-family:'Segoe UI',Arial,sans-serif;
+  background:#0d0b1e;color:#fff;
+  font-family:'Nunito',sans-serif;
   height:100dvh;display:flex;flex-direction:column;
   align-items:center;justify-content:flex-start;
   overflow:hidden;user-select:none;
 }
+
+/* ── HUD ──────────────────────────────────────────────────── */
 #hud{
   width:100%;max-width:520px;
   display:flex;align-items:center;justify-content:space-between;
-  padding:14px 20px 6px;
+  padding:14px 18px 6px;
+  background:linear-gradient(180deg,rgba(0,0,0,.35) 0%,transparent 100%);
 }
-#phase-lbl{font-size:14px;color:#a7a9be;letter-spacing:1px;text-transform:uppercase}
-#phase-lbl b{color:#fff;font-size:17px}
+#phase-lbl{font-size:13px;color:#9090b8;letter-spacing:1px;text-transform:uppercase;font-weight:800}
+#phase-lbl b{color:#fff;font-size:18px;font-weight:900}
 #timer-col{display:flex;flex-direction:column;align-items:center;gap:4px}
-#timer{font-size:30px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:2px;transition:color .3s}
+#timer{
+  font-size:30px;font-weight:900;font-variant-numeric:tabular-nums;
+  letter-spacing:2px;transition:color .3s;
+  text-shadow:0 0 20px currentColor;
+}
 #timer.red{color:#e94560;animation:blink .5s infinite alternate}
 @keyframes blink{to{opacity:.4}}
-#tbar-bg{width:90px;height:4px;background:#2a2a4a;border-radius:2px}
-#tbar{height:4px;background:#e94560;border-radius:2px;width:100%;transition:width 1s linear,background .5s}
-#grid-lbl{font-size:13px;color:#a7a9be;text-transform:capitalize;letter-spacing:1px}
+#tbar-bg{width:90px;height:5px;background:#ffffff18;border-radius:3px;overflow:hidden}
+#tbar{height:5px;background:linear-gradient(90deg,#e94560,#ff6b6b);border-radius:3px;width:100%;transition:width 1s linear,background .5s;box-shadow:0 0 8px #e9456080}
 .hud-btns{display:flex;gap:6px;align-items:center;}
 .hud-btn{
-  background:transparent;border:2px solid #2a2a4a;color:#a7a9be;
-  border-radius:50%;width:38px;height:38px;font-size:18px;cursor:pointer;
+  background:#ffffff0d;border:1.5px solid #ffffff18;color:#9090b8;
+  border-radius:50%;width:38px;height:38px;font-size:17px;cursor:pointer;
   display:flex;align-items:center;justify-content:center;
-  transition:all .15s;
+  transition:all .15s;backdrop-filter:blur(4px);
 }
-.hud-btn:hover{background:#2a2a4a;color:#fff;}
-.hud-btn:active{transform:scale(.92);}
-#btn-restart:active{transform:rotate(-30deg) scale(.92);}
-#btn-hint.on{background:#f39c12;border-color:#f39c12;color:#fff;}
+.hud-btn:hover{background:#ffffff22;color:#fff;border-color:#ffffff44;}
+.hud-btn:active{transform:scale(.88);}
+#btn-restart:active{transform:rotate(-30deg) scale(.88);}
+#btn-hint.on{background:#f39c12;border-color:#f39c12;color:#fff;box-shadow:0 0 12px #f39c1288;}
 
 #canvas-wrap{
   flex:1;display:flex;align-items:center;justify-content:center;
-  width:100%;padding:8px 14px 10px;
+  width:100%;padding:6px 12px 8px;
 }
-canvas{display:block;touch-action:none;border-radius:14px}
+canvas{display:block;touch-action:none;border-radius:18px;box-shadow:0 8px 40px rgba(0,0,0,.6);}
 
-/* overlays */
+/* ── Overlays ─────────────────────────────────────────────── */
 .ov{
-  position:fixed;inset:0;background:#0f0e17cc;backdrop-filter:blur(8px);
+  position:fixed;inset:0;
+  background:radial-gradient(ellipse at center,#1a1040ee 0%,#0a0818ee 100%);
+  backdrop-filter:blur(12px);
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   gap:14px;z-index:9;opacity:0;pointer-events:none;transition:opacity .35s;
 }
 .ov.show{opacity:1;pointer-events:all}
-.ov h2{font-size:38px;font-weight:900}
-.ov p{color:#a7a9be;font-size:15px}
-.btn{
-  background:#e94560;color:#fff;border:none;border-radius:30px;
-  padding:13px 38px;font-size:16px;font-weight:700;letter-spacing:1px;
-  cursor:pointer;transition:transform .12s,opacity .12s;
+.ov-card{
+  background:linear-gradient(145deg,#1e1a35,#141228);
+  border:1px solid #ffffff14;border-radius:24px;
+  padding:28px 36px;display:flex;flex-direction:column;align-items:center;gap:12px;
+  box-shadow:0 20px 60px rgba(0,0,0,.5);min-width:260px;
 }
-.btn:active{transform:scale(.94);opacity:.85}
-.btn-ghost{background:transparent;border:1px solid #2a2a4a;color:#a7a9be;margin-top:2px}
-#stars{font-size:36px;letter-spacing:6px;}
-#win-coins-earned{font-size:20px;font-weight:800;color:#f39c12;min-height:26px;}
+.ov h2{font-size:36px;font-weight:900;text-shadow:0 2px 20px rgba(255,255,255,.2)}
+.ov p{color:#9090b8;font-size:15px;font-weight:700}
+.btn{
+  background:linear-gradient(135deg,#e94560,#c73652);color:#fff;border:none;border-radius:30px;
+  padding:13px 36px;font-size:16px;font-weight:800;letter-spacing:.5px;
+  cursor:pointer;transition:transform .12s,box-shadow .15s;
+  box-shadow:0 4px 20px #e9456055;
+}
+.btn:hover{box-shadow:0 6px 28px #e9456088;}
+.btn:active{transform:scale(.94);}
+.btn-gold{background:linear-gradient(135deg,#f39c12,#e67e22);box-shadow:0 4px 20px #f39c1255;}
+.btn-gold:hover{box-shadow:0 6px 28px #f39c1288;}
+.btn-ghost{
+  background:#ffffff0d;border:1.5px solid #ffffff18;color:#9090b8;
+  box-shadow:none;padding:11px 32px;
+}
+.btn-ghost:hover{background:#ffffff1a;color:#fff;}
+#stars{font-size:40px;letter-spacing:8px;filter:drop-shadow(0 0 8px #f39c12);}
+#win-coins-earned{font-size:22px;font-weight:900;color:#f39c12;min-height:28px;text-shadow:0 0 16px #f39c1288;}
 
 /* ── Map Screen ─────────────────────────────────────────── */
 #screen-map{
-  position:fixed;inset:0;z-index:100;background:#0f0e17;
+  position:fixed;inset:0;z-index:100;
+  background:radial-gradient(ellipse at 25% 15%,#1e0d3a 0%,#0d0b1e 55%,#080612 100%);
   display:flex;flex-direction:column;overflow:hidden;
   transition:opacity .3s;
 }
 #screen-map.hidden{opacity:0;pointer-events:none;}
 #map-header{
   display:flex;align-items:center;justify-content:space-between;
-  padding:22px 20px 8px;flex-shrink:0;
+  padding:22px 20px 10px;flex-shrink:0;
 }
-#map-header h1{font-size:21px;font-weight:900;letter-spacing:1px;}
+#map-header h1{
+  font-size:22px;font-weight:900;letter-spacing:1px;
+  background:linear-gradient(135deg,#c084fc,#818cf8,#60a5fa);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
 #coins-hud{
   display:flex;align-items:center;gap:6px;
-  font-size:16px;font-weight:800;color:#f39c12;
-  background:#1a1a2e;border-radius:20px;padding:6px 14px;
+  font-size:15px;font-weight:800;color:#fbbf24;
+  background:#ffffff0d;border:1.5px solid #ffffff18;
+  border-radius:20px;padding:6px 14px;backdrop-filter:blur(8px);
 }
 #map-phases{
   flex:1;overflow-y:auto;padding:8px 14px 4px;
-  display:grid;grid-template-columns:repeat(4,1fr);gap:10px;
+  display:grid;grid-template-columns:repeat(4,1fr);gap:9px;
   align-content:start;
 }
+/* scrollbar */
+#map-phases::-webkit-scrollbar{width:4px}
+#map-phases::-webkit-scrollbar-track{background:transparent}
+#map-phases::-webkit-scrollbar-thumb{background:#ffffff18;border-radius:2px}
+
 .phase-tile{
-  background:#1a1a2e;border-radius:14px;
-  padding:10px 4px 8px;display:flex;flex-direction:column;
-  align-items:center;gap:3px;cursor:pointer;
-  transition:transform .12s,border-color .15s;
-  border:2px solid transparent;position:relative;min-height:76px;
+  border-radius:16px;padding:10px 4px 9px;
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  cursor:pointer;transition:transform .12s,box-shadow .15s;
+  border:1.5px solid transparent;position:relative;min-height:78px;
+  backdrop-filter:blur(4px);
 }
-.phase-tile:active{transform:scale(.91);}
-.phase-tile.locked{opacity:.35;cursor:default;pointer-events:none;}
-.phase-tile.current{border-color:#e94560;background:#1f0e17;}
-.phase-tile.done{border-color:#2a2a4a;}
-.pt-num{font-size:19px;font-weight:800;}
-.pt-stars{font-size:12px;letter-spacing:3px;}
-.pt-stars .s-on{color:#f39c12;}
-.pt-stars .s-off{color:#2a2a4a;}
-.pt-chest{position:absolute;top:4px;right:5px;font-size:13px;}
-.pt-lock{font-size:20px;color:#333;margin-top:4px;}
-.pt-type{font-size:9px;color:#555;letter-spacing:1px;text-transform:uppercase;margin-top:1px;}
+.phase-tile:active{transform:scale(.88);}
+.phase-tile.locked{opacity:.28;cursor:default;pointer-events:none;}
+
+/* Square phases — purple/indigo */
+.phase-tile.sq{background:linear-gradient(145deg,#1e1b4b,#2e1a5e);border-color:#3b2d7a;}
+.phase-tile.sq.current{border-color:#818cf8;box-shadow:0 0 18px #818cf855;}
+.phase-tile.sq.star3{box-shadow:0 0 14px #f59e0b66;border-color:#f59e0b;}
+
+/* Hex phases — teal/emerald */
+.phase-tile.hx{background:linear-gradient(145deg,#064e3b,#0a3d2e);border-color:#065f46;}
+.phase-tile.hx.current{border-color:#34d399;box-shadow:0 0 18px #34d39955;}
+.phase-tile.hx.star3{box-shadow:0 0 14px #f59e0b66;border-color:#f59e0b;}
+
+/* Hex+ phases — amber/orange */
+.phase-tile.hxp{background:linear-gradient(145deg,#451a03,#6b2d0a);border-color:#92400e;}
+.phase-tile.hxp.current{border-color:#f97316;box-shadow:0 0 18px #f9731655;}
+.phase-tile.hxp.star3{box-shadow:0 0 14px #f59e0b66;border-color:#f59e0b;}
+
+.pt-num{font-size:18px;font-weight:900;}
+.pt-stars{font-size:11px;letter-spacing:3px;}
+.pt-stars .s-on{color:#fbbf24;filter:drop-shadow(0 0 3px #fbbf24);}
+.pt-stars .s-off{color:#ffffff18;}
+.pt-chest{position:absolute;top:4px;right:5px;font-size:12px;filter:drop-shadow(0 0 4px #fbbf24);}
+.pt-lock{font-size:18px;color:#ffffff25;margin-top:4px;}
+.pt-type{font-size:8px;color:#ffffff44;letter-spacing:1.5px;text-transform:uppercase;margin-top:1px;}
 
 /* ── Shop ─────────────────────────────────────────────────── */
 #map-shop{
-  flex-shrink:0;padding:8px 14px 22px;
-  border-top:1px solid #1a1a2e;
+  flex-shrink:0;padding:8px 14px 24px;
+  border-top:1px solid #ffffff0c;
 }
-#map-shop h3{font-size:11px;color:#555;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;}
+#map-shop h3{font-size:10px;color:#ffffff33;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;font-weight:800;}
 .shop-row{display:flex;gap:10px;}
 .shop-item{
-  flex:1;background:#1a1a2e;border-radius:12px;padding:10px 8px;
+  flex:1;border-radius:14px;padding:10px 8px;
   display:flex;flex-direction:column;align-items:center;gap:3px;
-  cursor:pointer;border:2px solid #2a2a4a;transition:border-color .15s,transform .12s;
+  cursor:pointer;border:1.5px solid #ffffff14;
+  background:#ffffff08;
+  transition:border-color .15s,transform .12s,box-shadow .15s;
+  backdrop-filter:blur(6px);
 }
-.shop-item:active{transform:scale(.93);}
-.shop-item.affordable{border-color:#f39c12;}
-.shop-item.broke{opacity:.4;cursor:default;pointer-events:none;}
+.shop-item:active{transform:scale(.91);}
+.shop-item.affordable{border-color:#fbbf24;box-shadow:0 0 12px #fbbf2433;}
+.shop-item.broke{opacity:.35;cursor:default;pointer-events:none;}
 .si-icon{font-size:20px;}
-.si-name{font-size:11px;color:#a7a9be;text-align:center;}
-.si-price{font-size:13px;font-weight:700;color:#f39c12;}
+.si-name{font-size:10px;color:#9090b8;text-align:center;font-weight:700;}
+.si-price{font-size:13px;font-weight:800;color:#fbbf24;}
 
 /* ── Chest overlay ───────────────────────────────────────── */
 #ov-chest{z-index:200;}
 #chest-box{
-  background:#1a1a2e;border-radius:22px;
-  padding:28px 40px 24px;display:flex;flex-direction:column;
-  align-items:center;gap:12px;min-width:240px;
+  background:linear-gradient(145deg,#1e1a35,#141228);
+  border:1px solid #ffffff14;border-radius:24px;
+  padding:30px 44px 26px;display:flex;flex-direction:column;
+  align-items:center;gap:12px;min-width:250px;
+  box-shadow:0 24px 64px rgba(0,0,0,.6);
 }
-#chest-anim{font-size:68px;animation:chestPop .55s cubic-bezier(.175,.885,.32,1.275);}
+#chest-anim{font-size:72px;animation:chestPop .6s cubic-bezier(.175,.885,.32,1.275);}
 @keyframes chestPop{
-  0%{transform:scale(.2) rotate(-20deg);opacity:0}
-  60%{transform:scale(1.18) rotate(6deg)}
+  0%{transform:scale(.15) rotate(-20deg);opacity:0}
+  65%{transform:scale(1.2) rotate(8deg)}
   100%{transform:scale(1) rotate(0)}
 }
-#chest-reward{font-size:28px;font-weight:900;color:#f39c12;}
-#chest-sub{font-size:14px;color:#a7a9be;}
+#chest-reward{font-size:30px;font-weight:900;color:#fbbf24;text-shadow:0 0 20px #fbbf2488;}
+#chest-sub{font-size:14px;color:#9090b8;font-weight:700;}
 
 /* ── Coins in HUD ────────────────────────────────────────── */
-#coins-game{font-size:13px;font-weight:700;color:#f39c12;letter-spacing:1px;}
+#coins-game{font-size:12px;font-weight:800;color:#fbbf24;letter-spacing:.5px;}
 </style>
 </head>
 <body>
@@ -166,19 +220,23 @@ canvas{display:block;touch-action:none;border-radius:14px}
 <div id="canvas-wrap"><canvas id="c"></canvas></div>
 
 <div id="ov-win" class="ov">
-  <div id="stars">★★★</div>
-  <h2>🐍 Escapou!</h2>
-  <p id="win-msg">Todas as cobras fugiram!</p>
-  <div id="win-coins-earned"></div>
-  <button class="btn" id="btn-chest-open" style="background:#f39c12;display:none">📦 Abrir Baú!</button>
-  <button class="btn" id="btn-next">Próxima Fase ▶</button>
-  <button class="btn btn-ghost" id="btn-map-win">◀ Mapa</button>
+  <div class="ov-card">
+    <div id="stars">★★★</div>
+    <h2>Escapou! 🐍</h2>
+    <p id="win-msg">Todas as cobras fugiram!</p>
+    <div id="win-coins-earned"></div>
+    <button class="btn btn-gold" id="btn-chest-open" style="display:none">📦 Abrir Baú!</button>
+    <button class="btn" id="btn-next">Próxima Fase ▶</button>
+    <button class="btn btn-ghost" id="btn-map-win">◀ Mapa</button>
+  </div>
 </div>
 <div id="ov-lose" class="ov">
-  <h2>⏱ Tempo!</h2>
-  <p>As cobras ficaram presas...</p>
-  <button class="btn" id="btn-retry2">Tentar Novamente</button>
-  <button class="btn btn-ghost" id="btn-map-lose">◀ Mapa</button>
+  <div class="ov-card">
+    <h2>⏱ Tempo!</h2>
+    <p>As cobras ficaram presas...</p>
+    <button class="btn" id="btn-retry2">Tentar Novamente</button>
+    <button class="btn btn-ghost" id="btn-map-lose">◀ Mapa</button>
+  </div>
 </div>
 
 <!-- Mapa de Fases -->
@@ -283,16 +341,19 @@ function buildMapScreen(){
     const pdata=prog[p]||{stars:0,chest:false};
     const locked=p>maxPhase;
     const current=p===maxPhase;
-    const type=p<=15?'SQ':p<=30?'HEX':'HEX+';
+    const typeLabel=p<=15?'SQ':p<=30?'HEX':'HEX+';
+    const tileClass=p<=15?'sq':p<=30?'hx':'hxp';
+    tile.classList.add(tileClass);
 
     if(locked){
       tile.classList.add('locked');
-      tile.innerHTML=`<div class="pt-num" style="color:#333">${p}</div><div class="pt-lock">🔒</div>`;
+      tile.innerHTML=`<div class="pt-num">${p}</div><div class="pt-lock">🔒</div>`;
     } else {
       if(current) tile.classList.add('current');
       else tile.classList.add('done');
-
       const stars=pdata.stars||0;
+      if(stars===3) tile.classList.add('star3');
+
       const starHTML='<span class="s-on">'+'★'.repeat(stars)+'</span>'
                     +'<span class="s-off">'+'☆'.repeat(3-stars)+'</span>';
       const chestBadge=(stars===3&&!pdata.chest)?'<div class="pt-chest">📦</div>':'';
@@ -300,7 +361,7 @@ function buildMapScreen(){
         ${chestBadge}
         <div class="pt-num">${p}</div>
         <div class="pt-stars">${starHTML}</div>
-        <div class="pt-type">${type}</div>`;
+        <div class="pt-type">${typeLabel}</div>`;
       tile.addEventListener('click',()=>{hideMap();startPhase(p);});
     }
     container.appendChild(tile);
@@ -990,8 +1051,18 @@ function ensureAnimLoop(){
 function render(){
   const{ctx,canvas,type,rows,cols,cs}=G;
   ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.fillStyle=type==='hex'?'#0b1a0b':'#12111e';
+
+  // Radial gradient background
+  const cx=canvas.width/2,cy=canvas.height/2;
+  const grad=ctx.createRadialGradient(cx,cy*.7,0,cx,cy,Math.max(canvas.width,canvas.height)*.7);
+  if(type==='hex'){
+    grad.addColorStop(0,'#0d2218');grad.addColorStop(1,'#060e0a');
+  } else {
+    grad.addColorStop(0,'#171130');grad.addColorStop(1,'#08060f');
+  }
+  ctx.fillStyle=grad;
   ctx.fillRect(0,0,canvas.width,canvas.height);
+
   drawGrid(ctx,type,rows,cols,cs);
   for(const sn of G.snakes) if(!sn.exited) drawRail(sn);
   if(G.showHint) for(const sn of getUnblockedSnakes()) drawHintGlow(sn);
@@ -1004,10 +1075,15 @@ function drawRail(sn){
   const{ctx,type,cs}=G;
   const pts=sn.rail.filter(([r,c])=>isInGrid(r,c,G.rows,G.cols)).map(([r,c])=>cellCenter(type,r,c,cs));
   if(pts.length<2) return;
-  ctx.strokeStyle=sn.color+'22';ctx.lineWidth=cs*.22;ctx.lineCap='round';ctx.lineJoin='round';
+  // Dashed subtle rail
+  ctx.save();
+  ctx.setLineDash([cs*.08,cs*.14]);
+  ctx.strokeStyle=sn.color+'28';ctx.lineWidth=cs*.14;ctx.lineCap='round';ctx.lineJoin='round';
   ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);
   for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i].x,pts[i].y);
   ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.restore();
 }
 
 function drawSnake(sn){
@@ -1025,29 +1101,53 @@ function drawSnake(sn){
     pts[pts.length-1]={x:from.x+(to.x-from.x)*t,y:from.y+(to.y-from.y)*t};
   }
 
-  // Outline
-  ctx.strokeStyle='rgba(0,0,0,0.35)';
-  ctx.lineWidth=r*2+5;ctx.lineCap='round';ctx.lineJoin='round';
+  const tail=pts[0],head=pts[pts.length-1];
+
+  // ── Glow pass (cheap: wide semi-transparent stroke) ──
+  ctx.strokeStyle=color+'2a';
+  ctx.lineWidth=r*3.8;ctx.lineCap='round';ctx.lineJoin='round';
   drawPath(ctx,pts);
 
-  // Body
-  ctx.strokeStyle=color;ctx.lineWidth=r*2;
+  // ── Dark outline ──
+  ctx.strokeStyle='rgba(0,0,0,0.5)';
+  ctx.lineWidth=r*2+4;
   drawPath(ctx,pts);
 
-  // Head circle
-  const head=pts[pts.length-1];
-  ctx.fillStyle=color;
-  ctx.beginPath();ctx.arc(head.x,head.y,r*1.25,0,Math.PI*2);ctx.fill();
-  ctx.strokeStyle='rgba(0,0,0,0.3)';ctx.lineWidth=2;ctx.stroke();
+  // ── Gradient body (tail fades out) ──
+  const bodyGrad=ctx.createLinearGradient(tail.x,tail.y,head.x,head.y);
+  bodyGrad.addColorStop(0,color+'66');
+  bodyGrad.addColorStop(0.5,color+'cc');
+  bodyGrad.addColorStop(1,color);
+  ctx.strokeStyle=bodyGrad;ctx.lineWidth=r*2;
+  drawPath(ctx,pts);
 
-  // Eyes
+  // ── Head ──
+  const headGrad=ctx.createRadialGradient(head.x-r*.3,head.y-r*.35,0,head.x,head.y,r*1.35);
+  headGrad.addColorStop(0,lighten(color,55));
+  headGrad.addColorStop(1,color);
+  ctx.fillStyle=headGrad;
+  ctx.beginPath();ctx.arc(head.x,head.y,r*1.3,0,Math.PI*2);ctx.fill();
+
+  // Head outline
+  ctx.strokeStyle='rgba(0,0,0,0.4)';ctx.lineWidth=2.5;
+  ctx.beginPath();ctx.arc(head.x,head.y,r*1.3,0,Math.PI*2);ctx.stroke();
+
+  // ── Eyes ──
   const dir=pts.length>1
     ?{x:head.x-pts[pts.length-2].x,y:head.y-pts[pts.length-2].y}
     :{x:1,y:0};
   const dl=Math.hypot(dir.x,dir.y)||1;
   const nx=-dir.y/dl,ny=dir.x/dl;
-  drawEye(ctx,head.x+nx*r*.45,head.y+ny*r*.45,r*.28);
-  drawEye(ctx,head.x-nx*r*.45,head.y-ny*r*.45,r*.28);
+  drawEye(ctx,head.x+nx*r*.5,head.y+ny*r*.5,r*.3);
+  drawEye(ctx,head.x-nx*r*.5,head.y-ny*r*.5,r*.3);
+}
+
+function lighten(hex,amt){
+  const n=parseInt(hex.replace('#',''),16);
+  const r=Math.min(255,(n>>16)+amt);
+  const g=Math.min(255,((n>>8)&0xff)+amt);
+  const b=Math.min(255,(n&0xff)+amt);
+  return `rgb(${r},${g},${b})`;
 }
 
 function drawPath(ctx,pts){
@@ -1057,12 +1157,15 @@ function drawPath(ctx,pts){
 }
 
 function drawEye(ctx,x,y,r){
+  // White sclera
   ctx.fillStyle='#fff';
   ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#222';
-  ctx.beginPath();ctx.arc(x+r*.15,y+r*.1,r*.5,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#fff';
-  ctx.beginPath();ctx.arc(x+r*.05,y-r*.1,r*.18,0,Math.PI*2);ctx.fill();
+  // Pupil
+  ctx.fillStyle='#111';
+  ctx.beginPath();ctx.arc(x+r*.18,y+r*.12,r*.55,0,Math.PI*2);ctx.fill();
+  // Shine
+  ctx.fillStyle='rgba(255,255,255,.85)';
+  ctx.beginPath();ctx.arc(x-r*.05,y-r*.15,r*.22,0,Math.PI*2);ctx.fill();
 }
 
 // ═══════════════════════════════════════════════════════════
