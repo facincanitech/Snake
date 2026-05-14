@@ -608,9 +608,9 @@ function cfg(phase){
   // 1 snake per phase: phase 1=2, phase 2=3, ..., phase 100=101→100
   const n=Math.min(100, pos+2);
 
-  // Snake length grows with phase; grid derived from n to keep ~52% fill
-  const blMax=Math.round(lerp(2,5,t));
-  const flMax=Math.round(lerp(2,3,t));
+  // Fixed snake size range 2-5; grid derived from n to keep ~52% fill
+  const blMax=5;
+  const flMax=Math.round(lerp(2,4,t));
   const avgBody=(2+blMax)/2;
   const avgFuture=(2+flMax)/2;
   const area=Math.round(n*(avgBody+avgFuture)/0.52);
