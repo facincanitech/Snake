@@ -114,7 +114,7 @@ canvas{display:block;touch-action:none;border-radius:18px;box-shadow:0 8px 40px 
 /* ── Phase cards (vertical stack) ───────────────────────── */
 #map-phases{
   flex:1;display:flex;flex-direction:column;align-items:center;
-  justify-content:flex-start;padding:8px 20px 0;gap:10px;overflow:hidden;
+  justify-content:flex-end;padding:8px 20px 0;gap:10px;overflow:hidden;
 }
 
 /* Current phase — big card */
@@ -394,12 +394,11 @@ function buildMapScreen(){
       ${stars>0?`<div class="pc-stars">${starHTML}${chestBadge}</div>`:''}
     </div>
     <div class="pc-type-badge">${phaseTypeName(cur).toUpperCase()}</div>`;
-  container.appendChild(curCard);
-
-  // Locked phases (next 2)
-  for(let i=1;i<=2;i++){
+  // Locked phases rendered first (appear at top)
+  const lockedCards=[];
+  for(let i=2;i>=1;i--){
     const p=cur+i;
-    if(p>45) break;
+    if(p>45) continue;
     const tc2=phaseTypeClass(p);
     const tn2=phaseTypeName(p);
     const lockedCard=document.createElement('div');
@@ -411,8 +410,11 @@ function buildMapScreen(){
         <div class="pc-name">${tn2}</div>
       </div>
       <div class="pc-lock-icon">🔒</div>`;
-    container.appendChild(lockedCard);
+    lockedCards.push(lockedCard);
   }
+  // Add locked (far first = top), then near locked, then current (bottom)
+  lockedCards.reverse().forEach(c=>container.appendChild(c));
+  container.appendChild(curCard);
 }
 
 function buyTime(){
