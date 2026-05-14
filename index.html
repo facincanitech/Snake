@@ -1127,6 +1127,7 @@ function drawSnake(sn){
   const r=cs*0.28;
   const isFlash=G.flashId===sn.id&&G.flashFrames%2===0;
   const color=isFlash?'#ff4444':sn.color;
+  const n=cells.length;
 
   const pts=cells.map(([row,c])=>cellCenter(type,row,c,cs));
   if(sn._anim){
@@ -1134,45 +1135,59 @@ function drawSnake(sn){
     pts[pts.length-1]={x:from.x+(to.x-from.x)*t,y:from.y+(to.y-from.y)*t};
   }
 
-  const tail=pts[0],head=pts[pts.length-1];
+  // ── Glow: large transparent circles at each segment ──
+  ctx.fillStyle=color+'20';
+  for(const pt of pts){ctx.beginPath();ctx.arc(pt.x,pt.y,r*2.1,0,Math.PI*2);ctx.fill();}
 
-  // ── Glow pass (cheap: wide semi-transparent stroke) ──
-  ctx.strokeStyle=color+'2a';
-  ctx.lineWidth=r*3.8;ctx.lineCap='round';ctx.lineJoin='round';
-  drawPath(ctx,pts);
+  // ── Dark outline (beads) ──
+  ctx.fillStyle='rgba(0,0,0,0.45)';
+  beadFill(ctx,pts,r+2.5);
 
-  // ── Dark outline ──
-  ctx.strokeStyle='rgba(0,0,0,0.5)';
-  ctx.lineWidth=r*2+4;
-  drawPath(ctx,pts);
+  // ── Body (beads, tail fades) ──
+  for(let i=0;i<n;i++){
+    const a=Math.round((0.38+0.62*(i/(n>1?n-1:1)))*255).toString(16).padStart(2,'0');
+    ctx.fillStyle=color+a;
+    ctx.beginPath();ctx.arc(pts[i].x,pts[i].y,r,0,Math.PI*2);ctx.fill();
+    if(i<n-1){
+      const a2=Math.round((0.38+0.62*((i+.5)/(n>1?n-1:1)))*255).toString(16).padStart(2,'0');
+      ctx.fillStyle=color+a2;
+      beadConnect(ctx,pts[i],pts[i+1],r);
+    }
+  }
 
-  // ── Gradient body (tail fades out) ──
-  const bodyGrad=ctx.createLinearGradient(tail.x,tail.y,head.x,head.y);
-  bodyGrad.addColorStop(0,color+'66');
-  bodyGrad.addColorStop(0.5,color+'cc');
-  bodyGrad.addColorStop(1,color);
-  ctx.strokeStyle=bodyGrad;ctx.lineWidth=r*2;
-  drawPath(ctx,pts);
-
-  // ── Head ──
+  // ── Head (gradient, bigger) ──
+  const head=pts[n-1];
   const headGrad=ctx.createRadialGradient(head.x-r*.3,head.y-r*.35,0,head.x,head.y,r*1.35);
   headGrad.addColorStop(0,lighten(color,55));
   headGrad.addColorStop(1,color);
   ctx.fillStyle=headGrad;
   ctx.beginPath();ctx.arc(head.x,head.y,r*1.3,0,Math.PI*2);ctx.fill();
-
-  // Head outline
   ctx.strokeStyle='rgba(0,0,0,0.4)';ctx.lineWidth=2.5;
   ctx.beginPath();ctx.arc(head.x,head.y,r*1.3,0,Math.PI*2);ctx.stroke();
 
   // ── Eyes ──
-  const dir=pts.length>1
-    ?{x:head.x-pts[pts.length-2].x,y:head.y-pts[pts.length-2].y}
-    :{x:1,y:0};
+  const dir=n>1?{x:head.x-pts[n-2].x,y:head.y-pts[n-2].y}:{x:1,y:0};
   const dl=Math.hypot(dir.x,dir.y)||1;
-  const nx=-dir.y/dl,ny=dir.x/dl;
-  drawEye(ctx,head.x+nx*r*.5,head.y+ny*r*.5,r*.3);
-  drawEye(ctx,head.x-nx*r*.5,head.y-ny*r*.5,r*.3);
+  const ex=-dir.y/dl,ey=dir.x/dl;
+  drawEye(ctx,head.x+ex*r*.5,head.y+ey*r*.5,r*.3);
+  drawEye(ctx,head.x-ex*r*.5,head.y-ey*r*.5,r*.3);
+}
+
+// Circles at each point + rect connectors — no diagonal artifacts at corners
+function beadFill(ctx,pts,r){
+  for(let i=0;i<pts.length;i++){
+    ctx.beginPath();ctx.arc(pts[i].x,pts[i].y,r,0,Math.PI*2);ctx.fill();
+    if(i<pts.length-1) beadConnect(ctx,pts[i],pts[i+1],r);
+  }
+}
+function beadConnect(ctx,p1,p2,r){
+  const dx=p2.x-p1.x,dy=p2.y-p1.y,len=Math.hypot(dx,dy);
+  if(!len) return;
+  const nx=-dy/len*r,ny=dx/len*r;
+  ctx.beginPath();
+  ctx.moveTo(p1.x+nx,p1.y+ny);ctx.lineTo(p2.x+nx,p2.y+ny);
+  ctx.lineTo(p2.x-nx,p2.y-ny);ctx.lineTo(p1.x-nx,p1.y-ny);
+  ctx.closePath();ctx.fill();
 }
 
 function lighten(hex,amt){
