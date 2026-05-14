@@ -623,11 +623,13 @@ function cfg(phase){
   }
 
   const area=rows*cols;
-  const density=lerp(0.12,0.70,tc);
-  const avgBody=lerp(2.5,5.5,tc);
-  const n=Math.max(2,Math.round(area*density/avgBody));
-  const blMax=Math.round(lerp(3,10,tc));
-  const flMax=Math.round(lerp(2,6,tc));
+  const blMax=Math.round(lerp(3,9,tc));
+  const flMax=Math.round(lerp(2,4,tc));
+  // n uses total footprint (body + future) so generation doesn't starve
+  const avgBody=(2+blMax)/2;
+  const avgFuture=(2+flMax)/2;
+  const density=lerp(0.22,0.72,tc);
+  const n=Math.max(2,Math.round(area*density/(avgBody+avgFuture)));
   return{rows,cols,n,bl:[2,Math.max(2,blMax)],fl:[2,Math.max(2,flMax)],type};
 }
 
@@ -1402,7 +1404,7 @@ function hide(id){document.getElementById(id).classList.remove('show');}
 const CS={
   canvas:null,ctx:null,
   snake:[],dir:{x:1,y:0},nextDir:{x:1,y:0},
-  fruit:{r:0,c:0},portals:[],
+  fruit:{r:0,c:0},portals:[],walls:[],
   score:0,coinsEarned:0,phase:1,
   fruitsCollected:0,fruitsNeeded:3,
   alive:false,phaseWon:false,loop:null,
@@ -1423,6 +1425,7 @@ function csCfg(phase){
     rows:Math.round(lerp(8,20,tc)),
     fruitsNeeded:Math.max(3,Math.round(lerp(3,14,t))),
     numPortals:phase<3?0:Math.min(3,Math.floor((phase-2)/4)+1),
+    numWalls:phase<4?0:Math.min(10,Math.floor((phase-3)/2)+1),
     speed:Math.max(75,185-phase*8),
   };
 }
@@ -1453,6 +1456,8 @@ function csStartPhase(phase){
   CS.snake=[{r:mr,c:5},{r:mr,c:4},{r:mr,c:3}];
   const occ=new Set(CS.snake.map(s=>s.r*1000+s.c));
 
+  CS.walls=csSpawnWalls(cfg.numWalls,occ);
+  CS.walls.forEach(w=>occ.add(w.r*1000+w.c));
   CS.portals=csSpawnPortals(cfg.numPortals,occ);
   CS.portals.forEach(p=>{occ.add(p.a.r*1000+p.a.c);occ.add(p.b.r*1000+p.b.c);});
   csSpawnFruit(occ);
@@ -1468,8 +1473,9 @@ function classicTick(){
   const head=CS.snake[0];
   let nr=head.r+CS.dir.y,nc=head.c+CS.dir.x;
 
-  // Wall collision
+  // Wall/boundary collision
   if(nr<0||nr>=CS.rows||nc<0||nc>=CS.cols){csDead();return;}
+  if(CS.walls.some(w=>w.r===nr&&w.c===nc)){csDead();return;}
 
   // Portal teleport
   for(const p of CS.portals){
@@ -1509,12 +1515,38 @@ function csDead(){
 function csSpawnFruit(existingOcc){
   const occ=existingOcc||new Set([
     ...CS.snake.map(s=>s.r*1000+s.c),
+    ...CS.walls.map(w=>w.r*1000+w.c),
     ...CS.portals.flatMap(p=>[p.a.r*1000+p.a.c,p.b.r*1000+p.b.c]),
   ]);
   let r,c;
   do{r=Math.floor(Math.random()*CS.rows);c=Math.floor(Math.random()*CS.cols);}
   while(occ.has(r*1000+c));
   CS.fruit={r,c};
+}
+
+function csSpawnWalls(num,occ){
+  const walls=[];const used=new Set(occ);
+  const dirs=[[0,1],[1,0],[0,-1],[-1,0]];
+  for(let i=0;i<num;i++){
+    for(let att=0;att<150;att++){
+      // Keep walls away from edges so snake always has escape route
+      const r=2+Math.floor(Math.random()*(CS.rows-4));
+      const c=2+Math.floor(Math.random()*(CS.cols-4));
+      if(used.has(r*1000+c)) continue;
+      walls.push({r,c});used.add(r*1000+c);
+      // Extend 1-2 cells in random direction to make line/L segments
+      let cr=r,cc=c;
+      const steps=1+Math.floor(Math.random()*2);
+      const d=dirs[Math.floor(Math.random()*4)];
+      for(let s=0;s<steps;s++){
+        cr+=d[0];cc+=d[1];
+        if(cr<2||cr>=CS.rows-2||cc<2||cc>=CS.cols-2||used.has(cr*1000+cc)) break;
+        walls.push({r:cr,c:cc});used.add(cr*1000+cc);
+      }
+      break;
+    }
+  }
+  return walls;
 }
 
 function csSpawnPortals(num,occ){
@@ -1566,6 +1598,21 @@ function renderClassic(){
   ctx.strokeStyle='rgba(255,255,255,0.04)';ctx.lineWidth=1;
   for(let r=0;r<=rows;r++){ctx.beginPath();ctx.moveTo(0,r*cs);ctx.lineTo(cols*cs,r*cs);ctx.stroke();}
   for(let c=0;c<=cols;c++){ctx.beginPath();ctx.moveTo(c*cs,0);ctx.lineTo(c*cs,rows*cs);ctx.stroke();}
+
+  // Walls
+  for(const w of CS.walls){
+    const wx=w.c*cs,wy=w.r*cs;
+    ctx.fillStyle='#1a1535';
+    ctx.fillRect(wx,wy,cs,cs);
+    ctx.strokeStyle='#5540a088';ctx.lineWidth=1.5;
+    ctx.strokeRect(wx+1.5,wy+1.5,cs-3,cs-3);
+    // Inner cross detail
+    ctx.strokeStyle='#3328607a';ctx.lineWidth=1;
+    ctx.beginPath();
+    ctx.moveTo(wx+cs*.25,wy+cs/2);ctx.lineTo(wx+cs*.75,wy+cs/2);
+    ctx.moveTo(wx+cs/2,wy+cs*.25);ctx.lineTo(wx+cs/2,wy+cs*.75);
+    ctx.stroke();
+  }
 
   // Portals
   const pt=Date.now()/500;
