@@ -277,6 +277,8 @@ canvas{display:block;touch-action:none;border-radius:18px;box-shadow:0 8px 40px 
   <div class="ov-card">
     <h2>⏱ Tempo!</h2>
     <p>As cobras ficaram presas...</p>
+    <button class="btn btn-gold" id="btn-continue">⏱ +30s por 🪙 20</button>
+    <p id="continue-msg" style="font-size:12px;color:#e94560;min-height:16px"></p>
     <button class="btn" id="btn-retry2">Tentar Novamente</button>
     <button class="btn btn-ghost" id="btn-map-lose">◀ Mapa</button>
   </div>
@@ -1237,6 +1239,20 @@ window.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('btn-play-map').addEventListener('click',()=>{hideMap();startPhase(SAVE.getMaxPhase());});
   document.getElementById('btn-map-win').addEventListener('click',showMap);
   document.getElementById('btn-map-lose').addEventListener('click',showMap);
+  document.getElementById('btn-continue').addEventListener('click',()=>{
+    const cost=20,bonus=30;
+    if(SAVE.getCoins()<cost){
+      document.getElementById('continue-msg').textContent='Moedas insuficientes!';
+      return;
+    }
+    SAVE.addCoins(-cost);
+    updateCoinsHUD();
+    hide('ov-lose');
+    G.lose=false;
+    G.timer=bonus;G.timerMax=Math.max(G.timerMax,bonus);
+    updateTimerUI();
+    G.timerH=setInterval(tick,1000);
+  });
 document.getElementById('btn-chest-ok').addEventListener('click',()=>{
     hide('ov-chest');
     showMap();
