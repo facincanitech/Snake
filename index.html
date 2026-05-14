@@ -390,8 +390,7 @@ function buildMapScreen(){
       ${stars>0?`<div class="pc-stars">${starHTML}${chestBadge}</div>`:''}
     </div>
     <div class="pc-type-badge">${phaseTypeName(cur).toUpperCase()}</div>`;
-  // Locked phases rendered first (appear at top)
-  const lockedCards=[];
+  // i=2 primeiro (mais longe = topo), i=1 depois, current por último (base)
   for(let i=2;i>=1;i--){
     const p=cur+i;
     if(p>45) continue;
@@ -406,10 +405,8 @@ function buildMapScreen(){
         <div class="pc-name">${tn2}</div>
       </div>
       <div class="pc-lock-icon">🔒</div>`;
-    lockedCards.push(lockedCard);
+    container.appendChild(lockedCard);
   }
-  // Add locked (far first = top), then near locked, then current (bottom)
-  lockedCards.reverse().forEach(c=>container.appendChild(c));
   container.appendChild(curCard);
 }
 
