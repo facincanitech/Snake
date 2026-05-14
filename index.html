@@ -601,35 +601,35 @@ const GRID_TYPES=['square','hex','tri','oct','ring'];
 function cfg(phase){
   if(phase<1) phase=1;
   const block=Math.floor((phase-1)/TYPE_BLOCK);
-  const pos=(phase-1)%TYPE_BLOCK;       // 0-99 within block
-  const t=pos/(TYPE_BLOCK-1);           // 0.0 → 1.0
-  const tc=Math.sqrt(t);               // sqrt curve ≈ n scales linearly with phase
+  const pos=(phase-1)%TYPE_BLOCK;   // 0-99 within block
+  const t=pos/(TYPE_BLOCK-1);       // 0.0 → 1.0
   const type=GRID_TYPES[block%GRID_TYPES.length];
 
-  // Each block targets ~2 snakes at phase 1 → ~100 at phase 100
-  let rows,cols;
-  if(type==='tri'){
-    cols=Math.round(lerp(8,36,tc));
-    rows=Math.round(lerp(4,22,tc));
-  } else if(type==='ring'){
-    rows=Math.round(lerp(3,16,tc));   // rings
-    cols=Math.round(lerp(8,50,tc));   // sectors
-  } else if(type==='hex'){
-    cols=Math.round(lerp(4,28,tc));
-    rows=Math.round(lerp(3,28,tc));
-  } else { // square, oct
-    cols=Math.round(lerp(4,30,tc));
-    rows=Math.round(lerp(4,26,tc));
-  }
+  // 1 snake per phase: phase 1=2, phase 2=3, ..., phase 100=101→100
+  const n=Math.min(100, pos+2);
 
-  const area=rows*cols;
-  const blMax=Math.round(lerp(3,9,tc));
-  const flMax=Math.round(lerp(2,4,tc));
-  // n uses total footprint (body + future) so generation doesn't starve
+  // Snake length grows with phase; grid derived from n to keep ~52% fill
+  const blMax=Math.round(lerp(2,5,t));
+  const flMax=Math.round(lerp(2,3,t));
   const avgBody=(2+blMax)/2;
   const avgFuture=(2+flMax)/2;
-  const density=lerp(0.22,0.72,tc);
-  const n=Math.max(2,Math.round(area*density/(avgBody+avgFuture)));
+  const area=Math.round(n*(avgBody+avgFuture)/0.52);
+
+  let rows,cols;
+  if(type==='ring'){
+    rows=Math.min(10,Math.max(3,Math.round(Math.sqrt(area/5))));
+    cols=Math.min(36,Math.max(8,Math.round(area/rows)));
+  } else if(type==='tri'){
+    cols=Math.min(40,Math.max(8,Math.round(Math.sqrt(area*2))));
+    rows=Math.min(20,Math.max(4,Math.ceil(area/cols)));
+  } else if(type==='hex'){
+    cols=Math.min(30,Math.max(4,Math.round(Math.sqrt(area*1.1))));
+    rows=Math.min(26,Math.max(3,Math.ceil(area/cols)));
+  } else { // square, oct
+    cols=Math.min(32,Math.max(4,Math.round(Math.sqrt(area*1.2))));
+    rows=Math.min(28,Math.max(4,Math.ceil(area/cols)));
+  }
+
   return{rows,cols,n,bl:[2,Math.max(2,blMax)],fl:[2,Math.max(2,flMax)],type};
 }
 
