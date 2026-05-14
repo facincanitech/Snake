@@ -256,7 +256,7 @@ canvas{display:block;touch-action:none;border-radius:18px;box-shadow:0 8px 40px 
   </div>
   <div class="hud-btns">
     <button id="btn-hint"    class="hud-btn" title="Dica">💡</button>
-    <button id="btn-undo"    class="hud-btn" title="Desfazer">↩</button>
+    <button id="btn-undo"    class="hud-btn" title="Desfazer (🪙10)">↩</button>
     <button id="btn-restart" class="hud-btn" title="Reiniciar">↺</button>
   </div>
 </div>
@@ -985,6 +985,9 @@ function getStars(t,max){
 // ── Undo ───────────────────────────────────────────────────
 function undo(){
   if(G.sliding||!G.history.length) return;
+  if(SAVE.getCoins()<10){flashUndoBtn();return;}
+  SAVE.addCoins(-10);
+  updateCoinsHUD();
   const snap=G.history.pop();
   for(const s of snap){
     const sn=G.snakes.find(x=>x.id===s.id);
@@ -992,6 +995,11 @@ function undo(){
   }
   G.win=false;
   render();
+}
+function flashUndoBtn(){
+  const btn=document.getElementById('btn-undo');
+  btn.style.borderColor='#e94560';btn.style.color='#e94560';
+  setTimeout(()=>{btn.style.borderColor='';btn.style.color='';},600);
 }
 
 // ── Hint ───────────────────────────────────────────────────
