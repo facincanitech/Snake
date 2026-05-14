@@ -248,16 +248,13 @@ canvas{display:block;touch-action:none;border-radius:18px;box-shadow:0 8px 40px 
 <body>
 
 <div id="hud">
-  <div style="display:flex;flex-direction:column;gap:3px;">
-    <div id="phase-lbl">Fase <b id="pnum">1</b></div>
-    <div id="coins-game">🪙 0</div>
-  </div>
+  <button id="btn-back" class="hud-btn" title="Voltar" style="flex-shrink:0">✕</button>
   <div id="timer-col">
+    <div id="phase-lbl">Fase <b id="pnum">1</b></div>
     <div id="timer">2:00</div>
     <div id="tbar-bg"><div id="tbar"></div></div>
   </div>
   <div class="hud-btns">
-    <button id="btn-map"     class="hud-btn" title="Mapa">🗺</button>
     <button id="btn-hint"    class="hud-btn" title="Dica">💡</button>
     <button id="btn-undo"    class="hud-btn" title="Desfazer">↩</button>
     <button id="btn-restart" class="hud-btn" title="Reiniciar">↺</button>
@@ -272,7 +269,6 @@ canvas{display:block;touch-action:none;border-radius:18px;box-shadow:0 8px 40px 
     <h2>Escapou! 🐍</h2>
     <p id="win-msg">Todas as cobras fugiram!</p>
     <div id="win-coins-earned"></div>
-    <button class="btn btn-gold" id="btn-chest-open" style="display:none">📦 Abrir Baú!</button>
     <button class="btn" id="btn-next">Próxima Fase ▶</button>
     <button class="btn btn-ghost" id="btn-map-win">◀ Mapa</button>
   </div>
@@ -962,7 +958,6 @@ function checkWin(){
     SAVE.addCoins(coinsEarned);
     updateCoinsHUD();
 
-    // Chest eligibility: 3 stars this run AND not yet claimed
     G.chestPending=stars===3&&!prev.chest;
 
     // Update overlay
@@ -971,7 +966,6 @@ function checkWin(){
       `Sobrou ${Math.floor(t/60)}:${String(t%60).padStart(2,'0')}`;
     document.getElementById('win-coins-earned').textContent=
       coinsEarned?`+${coinsEarned} 🪙`:'';
-    document.getElementById('btn-chest-open').style.display=G.chestPending?'':'none';
 
     setTimeout(()=>show('ov-win'),500);
   }
@@ -979,7 +973,7 @@ function checkWin(){
 
 function updateCoinsHUD(){
   const c=SAVE.getCoins();
-  document.getElementById('coins-game').textContent='🪙 '+c;
+  const cg=document.getElementById('coins-game');if(cg) cg.textContent='🪙 '+c;
 }
 
 // ── Estrelas ───────────────────────────────────────────────
@@ -1231,15 +1225,11 @@ window.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('btn-restart').addEventListener('click',()=>startPhase(G.phase));
   document.getElementById('btn-hint')   .addEventListener('click',toggleHint);
   document.getElementById('btn-undo')   .addEventListener('click',undo);
-  document.getElementById('btn-map')    .addEventListener('click',showMap);
+  document.getElementById('btn-back')    .addEventListener('click',showMap);
   document.getElementById('btn-play-map').addEventListener('click',()=>{hideMap();startPhase(SAVE.getMaxPhase());});
   document.getElementById('btn-map-win').addEventListener('click',showMap);
   document.getElementById('btn-map-lose').addEventListener('click',showMap);
-  document.getElementById('btn-chest-open').addEventListener('click',()=>{
-    hide('ov-win');
-    openChest(G.phase);
-  });
-  document.getElementById('btn-chest-ok').addEventListener('click',()=>{
+document.getElementById('btn-chest-ok').addEventListener('click',()=>{
     hide('ov-chest');
     showMap();
   });
