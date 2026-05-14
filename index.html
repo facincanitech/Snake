@@ -656,9 +656,8 @@ function bodyOf(sn){
 function isInGrid(r,c,R,C){return r>=0&&r<R&&c>=0&&c<C;}
 
 function solvable(snakes,R,C){
-  // Greedy simulation: repeatedly slide any free snake out.
-  // Moving a free snake only frees cells — never blocks others.
-  // So greedy finds a solution iff one exists. O(n²), no state-space limit.
+  // Step-by-step greedy: advance ONE step per snake per iteration.
+  // Avoids the "slide full path, corrupt state mid-way" bug.
   const n=snakes.length;
   const heads=[...snakes.map(s=>s.headIdx)];
   const exited=new Array(n).fill(false);
@@ -680,22 +679,6 @@ function solvable(snakes,R,C){
     }
     return m;
   }
-  function slideOut(i){
-    const rail=snakes[i].rail;
-    // Advance head step by step until fully out
-    while(heads[i]<rail.length-1){
-      const ni=heads[i]+1;
-      const[nr,nc]=rail[ni];
-      if(isInGrid(nr,nc,R,C)){
-        const occ=buildOcc();
-        const k2=key(nr,nc);
-        if(occ.has(k2)&&occ.get(k2)!==i) return false; // blocked mid-slide
-      }
-      heads[i]=ni;
-    }
-    exited[i]=true;
-    return true;
-  }
 
   let progress=true;
   while(progress){
@@ -708,7 +691,11 @@ function solvable(snakes,R,C){
       const ni=heads[i]+1;
       const[nr,nc]=rail[ni];
       const free=!isInGrid(nr,nc,R,C)||!occ.has(key(nr,nc))||occ.get(key(nr,nc))===i;
-      if(free){slideOut(i);progress=true;}
+      if(free){
+        heads[i]=ni;
+        if(heads[i]>=rail.length-1) exited[i]=true;
+        progress=true;
+      }
     }
   }
   return exited.every(Boolean);
@@ -755,12 +742,14 @@ function generateLevel(phase){
 }
 
 function generateSimple(phase){
+  // Fallback: half the snakes, minimum lengths, no solvability check
   const c=cfg(phase);
-  const{rows:R,cols:C,type}=c;
+  const{rows:R,cols:C,n,bl,fl,type}=c;
+  const target=Math.max(3,Math.floor(n/2));
   const snakes=[];
   const occ=new Set();
-  for(let i=0;i<2;i++){
-    const sn=buildSnake(i,type,R,C,occ,2,2);
+  for(let i=0;i<target;i++){
+    const sn=buildSnake(i,type,R,C,occ,bl[0],fl[0]);
     if(sn){snakes.push(sn);for(const[r,c2] of bodyOf(sn)) occ.add(key(r,c2));}
   }
   return{snakes,rows:R,cols:C,type,phase};
