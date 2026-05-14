@@ -252,6 +252,95 @@ canvas{display:block;touch-action:none;border-radius:18px;box-shadow:0 8px 40px 
 
 /* ── Coins in HUD ────────────────────────────────────────── */
 #coins-game{font-size:12px;font-weight:800;color:#fbbf24;letter-spacing:.5px;}
+
+/* ── Home Screen ──────────────────────────────────────────── */
+#screen-home{
+  position:fixed;inset:0;z-index:300;
+  background:radial-gradient(ellipse at 30% 20%,#1e0d3a 0%,#0d0b1e 60%,#080612 100%);
+  display:flex;flex-direction:column;align-items:center;
+  padding:0 20px;overflow:hidden;transition:opacity .3s;
+}
+#screen-home.hidden{opacity:0;pointer-events:none;}
+#home-header{
+  width:100%;max-width:480px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:22px 0 0;
+}
+#home-header h1{
+  font-size:24px;font-weight:900;
+  background:linear-gradient(135deg,#c084fc,#818cf8,#60a5fa);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+#home-coins-disp{
+  display:flex;align-items:center;gap:6px;
+  font-size:15px;font-weight:800;color:#fbbf24;
+  background:#ffffff0d;border:1.5px solid #ffffff18;
+  border-radius:20px;padding:6px 14px;
+}
+#home-hero{
+  display:flex;flex-direction:column;align-items:center;
+  padding:20px 0 26px;gap:6px;
+}
+.hh-emoji{font-size:62px;line-height:1;}
+#home-hero p{color:#9090b8;font-size:12px;font-weight:800;letter-spacing:2.5px;text-transform:uppercase;}
+#home-games{width:100%;max-width:480px;display:flex;flex-direction:column;gap:14px;}
+.game-banner{
+  border-radius:24px;padding:22px 24px;
+  display:flex;align-items:center;gap:18px;
+  cursor:pointer;transition:transform .12s,box-shadow .2s;
+  border:2px solid transparent;
+}
+.game-banner:active{transform:scale(.97);}
+.gb-escape{background:linear-gradient(135deg,#1e1b4b,#2e1065);border-color:#6366f1;--glow:#6366f155;animation:pcPulse 3s ease-in-out infinite;}
+.gb-classic{background:linear-gradient(135deg,#064e3b,#065040);border-color:#10b981;--glow:#10b98155;animation:pcPulse 3s ease-in-out infinite;}
+.gb-icon{font-size:44px;flex-shrink:0;}
+.gb-info{flex:1;}
+.gb-name{font-size:22px;font-weight:900;margin-bottom:4px;}
+.gb-desc{font-size:13px;color:#9090b8;font-weight:700;}
+.gb-arrow{font-size:24px;opacity:.5;flex-shrink:0;}
+
+/* ── Classic Snake ──────────────────────────────────────────── */
+#screen-snake{
+  position:fixed;inset:0;z-index:50;
+  background:#060f06;
+  display:flex;flex-direction:column;align-items:center;
+}
+#screen-snake.hidden{opacity:0;pointer-events:none;}
+#cs-hud{
+  width:100%;max-width:520px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 18px 6px;
+  background:linear-gradient(180deg,rgba(0,0,0,.35) 0%,transparent 100%);
+  flex-shrink:0;
+}
+#cs-back{
+  background:#ffffff0d;border:1.5px solid #ffffff18;color:#9090b8;
+  border-radius:50%;width:38px;height:38px;font-size:17px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .15s;
+}
+#cs-back:active{background:#ffffff22;color:#fff;}
+#cs-score-lbl{font-size:11px;color:#9090b8;letter-spacing:1px;font-weight:800;text-align:center;text-transform:uppercase;}
+#cs-score-lbl b{color:#2ecc71;font-size:22px;font-weight:900;display:block;line-height:1.2;}
+#cs-level-lbl{font-size:11px;color:#9090b8;font-weight:800;text-align:right;text-transform:uppercase;letter-spacing:1px;}
+#cs-level-lbl b{color:#fff;font-size:20px;font-weight:900;display:block;line-height:1.2;}
+#cs-canvas-wrap{flex:1;display:flex;align-items:center;justify-content:center;width:100%;padding:4px 12px;}
+#cs-canvas{display:block;touch-action:none;border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,.7);}
+#cs-dpad{
+  flex-shrink:0;display:grid;
+  grid-template-areas:'. up .' 'left . right' '. down .';
+  grid-template-columns:repeat(3,54px);grid-template-rows:repeat(3,54px);
+  gap:5px;margin-bottom:12px;
+}
+.dpad-btn{
+  background:#ffffff0d;border:1.5px solid #ffffff18;color:#fff;
+  border-radius:14px;font-size:22px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .08s,transform .08s;
+  touch-action:manipulation;-webkit-user-select:none;user-select:none;
+}
+.dpad-btn:active{background:#2ecc7133;border-color:#2ecc71;transform:scale(.88);}
+#dpad-up{grid-area:up;}#dpad-left{grid-area:left;}
+#dpad-right{grid-area:right;}#dpad-down{grid-area:down;}
 </style>
 </head>
 <body>
@@ -294,7 +383,7 @@ canvas{display:block;touch-action:none;border-radius:18px;box-shadow:0 8px 40px 
 </div>
 
 <!-- Mapa de Fases -->
-<div id="screen-map">
+<div id="screen-map" class="hidden">
   <div id="map-header">
     <h1>🐍 Snakes</h1>
     <div id="coins-hud">🪙 <span id="coins-map-val">0</span></div>
@@ -307,10 +396,65 @@ canvas{display:block;touch-action:none;border-radius:18px;box-shadow:0 8px 40px 
   <div id="map-shop"></div>
 
   <div id="map-hotbar">
-    <button class="hotbar-btn"><div class="hb-icon">🏠</div><div class="hb-label">Início</div></button>
+    <button class="hotbar-btn" id="hb-home"><div class="hb-icon">🏠</div><div class="hb-label">Início</div></button>
     <button class="hotbar-btn" style="opacity:1"><div class="hb-icon">🗺️</div><div class="hb-label">Fases</div></button>
     <button class="hotbar-btn"><div class="hb-icon">🛒</div><div class="hb-label">Loja</div></button>
-    <button class="hotbar-btn"><div class="hb-icon">⚙️</div><div class="hb-label">Config</div></button>
+    <button class="hotbar-btn"><div class="hb-icon">🎪</div><div class="hb-label">Eventos</div></button>
+  </div>
+</div>
+
+<!-- Home Screen -->
+<div id="screen-home">
+  <div id="home-header">
+    <h1>🐍 Snakes</h1>
+    <div id="home-coins-disp">🪙 <span id="home-coins-val">0</span></div>
+  </div>
+  <div id="home-hero">
+    <div class="hh-emoji">🎮</div>
+    <p>Escolha seu jogo</p>
+  </div>
+  <div id="home-games">
+    <div class="game-banner gb-escape" id="banner-escape">
+      <div class="gb-icon">🧩</div>
+      <div class="gb-info">
+        <div class="gb-name">Snake Escape</div>
+        <div class="gb-desc">Fuja pelo labirinto · Puzzle</div>
+      </div>
+      <div class="gb-arrow">▶</div>
+    </div>
+    <div class="game-banner gb-classic" id="banner-classic">
+      <div class="gb-icon">🍎</div>
+      <div class="gb-info">
+        <div class="gb-name">Snake</div>
+        <div class="gb-desc">Come frutinhas · Arcade</div>
+      </div>
+      <div class="gb-arrow">▶</div>
+    </div>
+  </div>
+</div>
+
+<!-- Classic Snake -->
+<div id="screen-snake" class="hidden">
+  <div id="cs-hud">
+    <button id="cs-back">✕</button>
+    <div id="cs-score-lbl">Score<b id="cs-score-val">0</b></div>
+    <div id="cs-level-lbl">Nível<b id="cs-level-val">1</b></div>
+  </div>
+  <div id="cs-canvas-wrap"><canvas id="cs-canvas"></canvas></div>
+  <div id="cs-dpad">
+    <button class="dpad-btn" id="dpad-up">▲</button>
+    <button class="dpad-btn" id="dpad-left">◀</button>
+    <button class="dpad-btn" id="dpad-right">▶</button>
+    <button class="dpad-btn" id="dpad-down">▼</button>
+  </div>
+</div>
+<div id="ov-cs-dead" class="ov" style="z-index:60">
+  <div class="ov-card">
+    <h2>💀 Morreu!</h2>
+    <p id="cs-dead-msg">Score: 0</p>
+    <div id="cs-dead-coins" style="font-size:22px;font-weight:900;color:#fbbf24;min-height:28px;text-shadow:0 0 16px #fbbf2488;"></div>
+    <button class="btn" id="cs-btn-retry">Jogar Novamente</button>
+    <button class="btn btn-ghost" id="cs-btn-home">◀ Menu</button>
   </div>
 </div>
 
@@ -355,10 +499,21 @@ const SAVE={
 // MAP SCREEN
 // ═══════════════════════════════════════════════════════════
 
+function showHome(){
+  clearInterval(G.timerH);
+  clearInterval(CS.loop);CS.alive=false;
+  hide('ov-win');hide('ov-lose');hide('ov-chest');hide('ov-cs-dead');
+  document.getElementById('screen-map').classList.add('hidden');
+  document.getElementById('screen-snake').classList.add('hidden');
+  document.getElementById('screen-home').classList.remove('hidden');
+  document.getElementById('home-coins-val').textContent=SAVE.getCoins();
+}
+
 function showMap(){
   clearInterval(G.timerH);
   hide('ov-win');hide('ov-lose');hide('ov-chest');
   buildMapScreen();
+  document.getElementById('screen-home').classList.add('hidden');
   document.getElementById('screen-map').classList.remove('hidden');
 }
 
@@ -1291,11 +1446,163 @@ function show(id){document.getElementById(id).classList.add('show');}
 function hide(id){document.getElementById(id).classList.remove('show');}
 
 // ═══════════════════════════════════════════════════════════
+// CLASSIC SNAKE
+// ═══════════════════════════════════════════════════════════
+const CS={
+  canvas:null,ctx:null,
+  snake:[],dir:{x:1,y:0},nextDir:{x:1,y:0},
+  fruit:{r:0,c:0},
+  score:0,coinsEarned:0,level:1,fruitsThisLevel:0,
+  alive:false,loop:null,
+  COLS:20,ROWS:20,cs:0,
+};
+const CS_COLORS=['#2ecc71','#3498db','#e74c3c','#f39c12','#9b59b6','#1abc9c','#e67e22','#e91e63'];
+
+function csInterval(){return Math.max(75,200-CS.level*12);}
+
+function startClassic(){
+  document.getElementById('screen-home').classList.add('hidden');
+  document.getElementById('screen-snake').classList.remove('hidden');
+  hide('ov-cs-dead');
+
+  const maxW=Math.min(window.innerWidth-24,520);
+  const maxH=window.innerHeight-200;
+  CS.cs=Math.max(12,Math.floor(Math.min(maxW,maxH)/CS.COLS));
+  CS.canvas.width=CS.COLS*CS.cs;CS.canvas.height=CS.ROWS*CS.cs;
+
+  CS.score=0;CS.coinsEarned=0;CS.level=1;CS.fruitsThisLevel=0;CS.alive=true;
+  CS.dir={x:1,y:0};CS.nextDir={x:1,y:0};
+  const mid=Math.floor(CS.ROWS/2);
+  CS.snake=[{r:mid,c:5},{r:mid,c:4},{r:mid,c:3}];
+  csSpawnFruit();updateCSHUD();
+  clearInterval(CS.loop);
+  CS.loop=setInterval(classicTick,csInterval());
+  csAnimLoop();
+}
+
+function classicTick(){
+  if(!CS.alive) return;
+  CS.dir={...CS.nextDir};
+  const head=CS.snake[0];
+  const nr=head.r+CS.dir.y,nc=head.c+CS.dir.x;
+  if(nr<0||nr>=CS.ROWS||nc<0||nc>=CS.COLS){csDead();return;}
+  if(CS.snake.some(s=>s.r===nr&&s.c===nc)){csDead();return;}
+  const ate=nr===CS.fruit.r&&nc===CS.fruit.c;
+  CS.snake.unshift({r:nr,c:nc});
+  if(!ate){CS.snake.pop();}
+  else{
+    CS.score++;
+    const coins=Math.max(1,Math.round(1+CS.level*0.5));
+    SAVE.addCoins(coins);CS.coinsEarned+=coins;
+    CS.fruitsThisLevel++;
+    if(CS.fruitsThisLevel>=5+CS.level){
+      CS.fruitsThisLevel=0;CS.level++;
+      clearInterval(CS.loop);CS.loop=setInterval(classicTick,csInterval());
+    }
+    csSpawnFruit();updateCSHUD();
+  }
+}
+
+function csDead(){
+  CS.alive=false;clearInterval(CS.loop);
+  document.getElementById('cs-dead-msg').textContent=`Score: ${CS.score} · Nível ${CS.level}`;
+  document.getElementById('cs-dead-coins').textContent=`+${CS.coinsEarned} 🪙 ganhos!`;
+  setTimeout(()=>show('ov-cs-dead'),400);
+}
+
+function csSpawnFruit(){
+  const occ=new Set(CS.snake.map(s=>s.r*1000+s.c));
+  let r,c;
+  do{r=Math.floor(Math.random()*CS.ROWS);c=Math.floor(Math.random()*CS.COLS);}
+  while(occ.has(r*1000+c));
+  CS.fruit={r,c};
+}
+
+function updateCSHUD(){
+  document.getElementById('cs-score-val').textContent=CS.score;
+  document.getElementById('cs-level-val').textContent=CS.level;
+}
+
+function csSetDir(dx,dy){
+  if(dx===-CS.dir.x&&dy===-CS.dir.y) return;
+  CS.nextDir={x:dx,y:dy};
+}
+
+function csAnimLoop(){
+  if(document.getElementById('screen-snake').classList.contains('hidden')) return;
+  renderClassic();
+  requestAnimationFrame(csAnimLoop);
+}
+
+function renderClassic(){
+  const{ctx,canvas,cs,ROWS,COLS,snake,fruit,dir,level}=CS;
+  if(!canvas||!ctx) return;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  // Background
+  const bg=ctx.createRadialGradient(canvas.width/2,canvas.height*.5,0,canvas.width/2,canvas.height/2,Math.max(canvas.width,canvas.height)*.7);
+  bg.addColorStop(0,'#0d2218');bg.addColorStop(1,'#060e0a');
+  ctx.fillStyle=bg;ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  // Grid
+  ctx.strokeStyle='rgba(255,255,255,0.04)';ctx.lineWidth=1;
+  for(let r=0;r<=ROWS;r++){ctx.beginPath();ctx.moveTo(0,r*cs);ctx.lineTo(COLS*cs,r*cs);ctx.stroke();}
+  for(let c=0;c<=COLS;c++){ctx.beginPath();ctx.moveTo(c*cs,0);ctx.lineTo(c*cs,ROWS*cs);ctx.stroke();}
+
+  // Fruit (pulsing glow)
+  const fx=fruit.c*cs+cs/2,fy=fruit.r*cs+cs/2,fr=cs*0.3;
+  const pulse=0.85+0.15*Math.sin(Date.now()/250);
+  ctx.save();
+  ctx.shadowColor='#e74c3c';ctx.shadowBlur=cs*pulse;
+  const fg=ctx.createRadialGradient(fx-fr*.3,fy-fr*.3,0,fx,fy,fr*1.1);
+  fg.addColorStop(0,'#ff6b6b');fg.addColorStop(1,'#c0392b');
+  ctx.fillStyle=fg;
+  ctx.beginPath();ctx.arc(fx,fy,fr*pulse,0,Math.PI*2);ctx.fill();
+  ctx.shadowBlur=0;
+  ctx.fillStyle='rgba(255,255,255,.55)';
+  ctx.beginPath();ctx.arc(fx-fr*.25,fy-fr*.3,fr*.25,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+
+  if(!snake.length) return;
+  const color=CS_COLORS[(level-1)%CS_COLORS.length];
+  const bead=cs*0.3;
+  const pts=snake.map(s=>({x:s.c*cs+cs/2,y:s.r*cs+cs/2}));
+
+  // Glow
+  ctx.save();ctx.globalAlpha=0.13;
+  ctx.strokeStyle=color;ctx.lineWidth=bead*3.6;ctx.lineCap='round';ctx.lineJoin='round';
+  ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);
+  for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i].x,pts[i].y);
+  ctx.stroke();ctx.restore();
+
+  // Outline + body
+  ctx.fillStyle='rgba(0,0,0,0.4)';beadFill(ctx,pts,bead+2.2);
+  ctx.fillStyle=color;beadFill(ctx,pts,bead);
+
+  // Head
+  const head=pts[0];
+  const hg=ctx.createRadialGradient(head.x-bead*.3,head.y-bead*.3,0,head.x,head.y,bead*1.3);
+  hg.addColorStop(0,lighten(color,55));hg.addColorStop(1,color);
+  ctx.fillStyle=hg;
+  ctx.beginPath();ctx.arc(head.x,head.y,bead*1.3,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='rgba(0,0,0,.4)';ctx.lineWidth=2;
+  ctx.beginPath();ctx.arc(head.x,head.y,bead*1.3,0,Math.PI*2);ctx.stroke();
+
+  // Eyes perpendicular to direction
+  const dl=Math.hypot(dir.x,dir.y)||1;
+  const ex=-dir.y/dl,ey=dir.x/dl;
+  drawEye(ctx,head.x+ex*bead*.5,head.y+ey*bead*.5,bead*.3);
+  drawEye(ctx,head.x-ex*bead*.5,head.y-ey*bead*.5,bead*.3);
+}
+
+// ═══════════════════════════════════════════════════════════
 // BOOT
 // ═══════════════════════════════════════════════════════════
 window.addEventListener('DOMContentLoaded',()=>{
   G.canvas=document.getElementById('c');
   G.ctx=G.canvas.getContext('2d');
+  CS.canvas=document.getElementById('cs-canvas');
+  CS.ctx=CS.canvas.getContext('2d');
 
   G.canvas.addEventListener('click',onTap);
   G.canvas.addEventListener('touchstart',onTap,{passive:false});
@@ -1323,14 +1630,50 @@ window.addEventListener('DOMContentLoaded',()=>{
     updateTimerUI();
     G.timerH=setInterval(tick,1000);
   });
-document.getElementById('btn-chest-ok').addEventListener('click',()=>{
-    hide('ov-chest');
-    showMap();
+  document.getElementById('btn-chest-ok').addEventListener('click',()=>{hide('ov-chest');showMap();});
+  document.getElementById('hb-home').addEventListener('click',showHome);
+
+  // Home screen
+  document.getElementById('banner-escape').addEventListener('click',showMap);
+  document.getElementById('banner-classic').addEventListener('click',startClassic);
+
+  // Classic snake controls
+  document.getElementById('cs-back').addEventListener('click',showHome);
+  document.getElementById('cs-btn-retry').addEventListener('click',startClassic);
+  document.getElementById('cs-btn-home').addEventListener('click',showHome);
+  document.getElementById('dpad-up')   .addEventListener('click',()=>csSetDir(0,-1));
+  document.getElementById('dpad-down') .addEventListener('click',()=>csSetDir(0,1));
+  document.getElementById('dpad-left') .addEventListener('click',()=>csSetDir(-1,0));
+  document.getElementById('dpad-right').addEventListener('click',()=>csSetDir(1,0));
+
+  // Keyboard
+  document.addEventListener('keydown',e=>{
+    if(document.getElementById('screen-snake').classList.contains('hidden')) return;
+    if(e.key==='ArrowLeft' ||e.key==='a') csSetDir(-1,0);
+    else if(e.key==='ArrowRight'||e.key==='d') csSetDir(1,0);
+    else if(e.key==='ArrowUp'  ||e.key==='w') csSetDir(0,-1);
+    else if(e.key==='ArrowDown'||e.key==='s') csSetDir(0,1);
   });
 
-  window.addEventListener('resize',()=>startPhase(G.phase));
+  // Swipe on classic snake canvas
+  let swipeStart=null;
+  CS.canvas.addEventListener('touchstart',e=>{swipeStart={x:e.touches[0].clientX,y:e.touches[0].clientY};},{passive:true});
+  CS.canvas.addEventListener('touchend',e=>{
+    if(!swipeStart) return;
+    const dx=e.changedTouches[0].clientX-swipeStart.x;
+    const dy=e.changedTouches[0].clientY-swipeStart.y;
+    if(Math.abs(dx)>Math.abs(dy)) csSetDir(dx>0?1:-1,0);
+    else csSetDir(0,dy>0?1:-1);
+    swipeStart=null;
+  },{passive:true});
 
-  showMap();
+  window.addEventListener('resize',()=>{
+    if(!document.getElementById('screen-snake').classList.contains('hidden')) startClassic();
+    else if(!document.getElementById('screen-map').classList.contains('hidden')) buildMapScreen();
+    else if(!document.getElementById('hud').style) startPhase(G.phase);
+  });
+
+  showHome();
 });
 </script>
 </body>
