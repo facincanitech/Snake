@@ -251,7 +251,16 @@ canvas{display:block;touch-action:none;border-radius:18px;box-shadow:0 8px 40px 
 #chest-sub{font-size:14px;color:#9090b8;font-weight:700;}
 
 /* ── Coins in HUD ────────────────────────────────────────── */
-#coins-game{font-size:12px;font-weight:800;color:#fbbf24;letter-spacing:.5px;}
+#coins-game,.cs-coins-disp{
+  font-size:11px;font-weight:800;color:#fbbf24;letter-spacing:.4px;
+  background:#fbbf2415;border:1px solid #fbbf2430;
+  border-radius:10px;padding:2px 7px;white-space:nowrap;
+}
+.hud-btn-cost{
+  border-radius:14px!important;width:auto!important;padding:0 9px!important;
+  gap:3px;flex-direction:column;
+}
+.btn-cost{font-size:9px;color:#fbbf24;font-weight:900;line-height:1;margin-top:-2px;}
 
 /* ── Home Screen ──────────────────────────────────────────── */
 #screen-home{
@@ -346,7 +355,10 @@ canvas{display:block;touch-action:none;border-radius:18px;box-shadow:0 8px 40px 
 <body>
 
 <div id="hud">
-  <button id="btn-back" class="hud-btn" title="Voltar" style="flex-shrink:0">✕</button>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0">
+    <button id="btn-back" class="hud-btn" title="Voltar">✕</button>
+    <div id="coins-game">🪙 0</div>
+  </div>
   <div id="timer-col">
     <div id="phase-lbl">Fase <b id="pnum">1</b></div>
     <div id="timer">2:00</div>
@@ -354,7 +366,7 @@ canvas{display:block;touch-action:none;border-radius:18px;box-shadow:0 8px 40px 
   </div>
   <div class="hud-btns">
     <button id="btn-hint"    class="hud-btn" title="Dica">💡</button>
-    <button id="btn-undo"    class="hud-btn" title="Desfazer (🪙10)">↩</button>
+    <button id="btn-undo"    class="hud-btn hud-btn-cost" title="Desfazer">↩<span class="btn-cost">🪙10</span></button>
     <button id="btn-restart" class="hud-btn" title="Reiniciar">↺</button>
   </div>
 </div>
@@ -436,7 +448,10 @@ canvas{display:block;touch-action:none;border-radius:18px;box-shadow:0 8px 40px 
 <!-- Classic Snake -->
 <div id="screen-snake" class="hidden">
   <div id="cs-hud">
-    <button id="cs-back">✕</button>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0">
+      <button id="cs-back">✕</button>
+      <div class="cs-coins-disp">🪙 <span id="cs-coins-val">0</span></div>
+    </div>
     <div id="cs-score-lbl">Score<b id="cs-score-val">0</b></div>
     <div id="cs-level-lbl">Nível<b id="cs-level-val">1</b></div>
   </div>
@@ -1184,6 +1199,8 @@ function checkWin(){
 function updateCoinsHUD(){
   const c=SAVE.getCoins();
   const cg=document.getElementById('coins-game');if(cg) cg.textContent='🪙 '+c;
+  const cc=document.getElementById('cs-coins-val');if(cc) cc.textContent=c;
+  const hv=document.getElementById('home-coins-val');if(hv) hv.textContent=c;
 }
 
 // ── Estrelas ───────────────────────────────────────────────
@@ -1494,6 +1511,7 @@ function classicTick(){
     CS.score++;
     const coins=Math.max(1,Math.round(1+CS.level*0.5));
     SAVE.addCoins(coins);CS.coinsEarned+=coins;
+    updateCoinsHUD();
     CS.fruitsThisLevel++;
     if(CS.fruitsThisLevel>=5+CS.level){
       CS.fruitsThisLevel=0;CS.level++;
