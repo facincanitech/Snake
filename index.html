@@ -148,6 +148,9 @@ canvas{display:block;touch-action:none;border-radius:18px;box-shadow:0 8px 40px 
 .pc-tri.pc-current{border-color:#fbbf24;box-shadow:0 0 32px #fbbf2444,0 12px 40px rgba(0,0,0,.5);}
 .pc-oct{background:linear-gradient(135deg,#042030,#063048);border-color:#0891b2;}
 .pc-oct.pc-current{border-color:#22d3ee;box-shadow:0 0 32px #22d3ee44,0 12px 40px rgba(0,0,0,.5);}
+.pc-ring{background:linear-gradient(135deg,#2d0a3e,#4a0f5e);border-color:#a855f7;}
+.pc-ring.pc-current{border-color:#d946ef;box-shadow:0 0 32px #d946ef44,0 12px 40px rgba(0,0,0,.5);}
+.pc-ring.pc-current{--glow:#d946ef55;animation:pcPulse 3s ease-in-out infinite;}
 
 .pc-num{
   font-size:52px;font-weight:900;line-height:1;opacity:.95;
@@ -364,17 +367,12 @@ function hideMap(){
 }
 
 function phaseTypeClass(p){
-  if(p<=15) return 'sq';
-  if(p<=30) return 'hx';
-  if(p<=45) return 'tri';
-  if(p<=60) return 'oct';
-  // 61+: cycle by segment of 15
-  const seg=Math.floor((p-61)/15);
-  return ['hx','oct','tri','sq'][seg%4];
+  const block=Math.floor((p-1)/100);
+  return ['sq','hx','tri','oct','ring'][block%5];
 }
 function phaseTypeName(p){
   const t=phaseTypeClass(p);
-  return {sq:'Square',hx:'Hexagonal',tri:'Triangular',oct:'Octagonal'}[t]||'Infinito';
+  return {sq:'Square',hx:'Hexagonal',tri:'Triangular',oct:'Octagonal',ring:'Ring'}[t];
 }
 
 function buildMapScreen(){
@@ -412,7 +410,6 @@ function buildMapScreen(){
   // i=2 primeiro (mais longe = topo), i=1 depois, current por último (base)
   for(let i=2;i>=1;i--){
     const p=cur+i;
-    if(p>45) continue;
     const tc2=phaseTypeClass(p);
     const tn2=phaseTypeName(p);
     const lockedCard=document.createElement('div');
@@ -492,89 +489,40 @@ const COLORS = [
   '#40c4ff','#ffd740','#ff6d00','#d500f9','#00e676',
 ];
 
-const PHASE_CFG = [
-  null,
-  // ── Square (fases 1-15) ──────────────────────────────────
-  // Densidade alvo: ~40% do grid ocupado por corpos
-  // bl começa em 2 para garantir variedade de tamanhos
-  {rows:4, cols:4,  n:2,  bl:[2,3], fl:[2,3], type:'square'}, // 1  — 16c, 2×2.5=5 (31%)
-  {rows:5, cols:5,  n:3,  bl:[2,3], fl:[2,3], type:'square'}, // 2  — 25c, 3×2.5=7 (28%)
-  {rows:5, cols:5,  n:3,  bl:[2,4], fl:[2,3], type:'square'}, // 3  — 25c, 3×3=9  (36%)
-  {rows:6, cols:6,  n:4,  bl:[2,4], fl:[2,3], type:'square'}, // 4  — 36c, 4×3=12 (33%)
-  {rows:6, cols:6,  n:4,  bl:[2,5], fl:[2,4], type:'square'}, // 5  — 36c, 4×3.5=14(39%)
-  {rows:7, cols:7,  n:5,  bl:[2,5], fl:[2,4], type:'square'}, // 6  — 49c, 5×3.5=17(35%)
-  {rows:7, cols:7,  n:6,  bl:[2,5], fl:[2,4], type:'square'}, // 7  — 49c, 6×3.5=21(43%)
-  {rows:8, cols:8,  n:7,  bl:[2,5], fl:[2,4], type:'square'}, // 8  — 64c, 7×3.5=24(38%)
-  {rows:8, cols:8,  n:8,  bl:[2,6], fl:[2,4], type:'square'}, // 9  — 64c, 8×4=32  (50%)
-  {rows:9, cols:9,  n:9,  bl:[2,6], fl:[2,5], type:'square'}, // 10 — 81c, 9×4=36  (44%)
-  {rows:9, cols:10, n:10, bl:[2,6], fl:[2,5], type:'square'}, // 11 — 90c,10×4=40  (44%)
-  {rows:10,cols:10, n:11, bl:[2,7], fl:[2,5], type:'square'}, // 12 —100c,11×4.5=50(50%)
-  {rows:11,cols:11, n:12, bl:[2,7], fl:[2,5], type:'square'}, // 13 —121c,12×4.5=54(45%)
-  {rows:11,cols:12, n:13, bl:[2,7], fl:[2,5], type:'square'}, // 14 —132c,13×4.5=58(44%)
-  {rows:12,cols:12, n:14, bl:[2,8], fl:[2,6], type:'square'}, // 15 —144c,14×5=70  (49%)
-  // ── Hexagonal (fases 16-30, cobra se move em 6 direções) ─
-  {rows:8, cols:9,  n:10, bl:[2,5], fl:[2,3], type:'hex'},    // 16 — 72c,10×3.5=35(49%)
-  {rows:9, cols:9,  n:12, bl:[2,5], fl:[2,3], type:'hex'},    // 17 — 81c,12×3.5=42(52%)
-  {rows:9, cols:10, n:13, bl:[2,5], fl:[2,4], type:'hex'},    // 18 — 90c,13×3.5=45(50%)
-  {rows:10,cols:10, n:14, bl:[2,6], fl:[2,4], type:'hex'},    // 19 —100c,14×4=56  (56%)
-  {rows:10,cols:11, n:16, bl:[2,6], fl:[2,4], type:'hex'},    // 20 —110c,16×4=64  (58%)
-  {rows:11,cols:11, n:18, bl:[2,6], fl:[2,4], type:'hex'},    // 21 —121c,18×4=72  (60%)
-  {rows:12,cols:12, n:20, bl:[2,6], fl:[2,4], type:'hex'},    // 22 —144c,20×4=80  (56%)
-  {rows:12,cols:13, n:22, bl:[2,6], fl:[2,4], type:'hex'},    // 23 —156c,22×4=88  (56%)
-  {rows:13,cols:13, n:25, bl:[2,6], fl:[2,4], type:'hex'},    // 24 —169c,25×4=100 (59%)
-  {rows:13,cols:14, n:28, bl:[2,6], fl:[2,4], type:'hex'},    // 25 —182c,28×4=112 (62%)
-  {rows:14,cols:14, n:30, bl:[2,6], fl:[2,4], type:'hex'},    // 26 —196c,30×4=120 (61%)
-  {rows:14,cols:15, n:33, bl:[2,6], fl:[2,4], type:'hex'},    // 27 —210c,33×4=132 (63%)
-  {rows:15,cols:15, n:36, bl:[2,6], fl:[2,4], type:'hex'},    // 28 —225c,36×4=144 (64%)
-  {rows:15,cols:16, n:40, bl:[2,6], fl:[2,4], type:'hex'},    // 29 —240c,40×4=160 (67%)
-  {rows:16,cols:16, n:44, bl:[2,6], fl:[2,4], type:'hex'},    // 30 —256c,44×4=176 (69%)
-  // ── Triangular (fases 31-45, cobra se move em 3 direções) ─
-  {rows:8, cols:14, n:8,  bl:[2,4], fl:[2,3], type:'tri'},    // 31
-  {rows:8, cols:16, n:10, bl:[2,4], fl:[2,3], type:'tri'},    // 32
-  {rows:9, cols:16, n:11, bl:[2,4], fl:[2,3], type:'tri'},    // 33
-  {rows:9, cols:18, n:12, bl:[2,5], fl:[2,3], type:'tri'},    // 34
-  {rows:10,cols:18, n:13, bl:[2,5], fl:[2,4], type:'tri'},    // 35
-  {rows:10,cols:20, n:14, bl:[2,5], fl:[2,4], type:'tri'},    // 36
-  {rows:10,cols:20, n:15, bl:[2,5], fl:[2,4], type:'tri'},    // 37
-  {rows:11,cols:20, n:16, bl:[2,5], fl:[2,4], type:'tri'},    // 38
-  {rows:11,cols:22, n:17, bl:[2,6], fl:[2,4], type:'tri'},    // 39
-  {rows:11,cols:22, n:18, bl:[2,6], fl:[2,4], type:'tri'},    // 40
-  {rows:12,cols:22, n:19, bl:[2,6], fl:[2,4], type:'tri'},    // 41
-  {rows:12,cols:24, n:20, bl:[2,6], fl:[2,4], type:'tri'},    // 42
-  {rows:12,cols:24, n:21, bl:[2,6], fl:[2,5], type:'tri'},    // 43
-  {rows:13,cols:24, n:22, bl:[2,6], fl:[2,5], type:'tri'},    // 44
-  {rows:13,cols:26, n:24, bl:[2,7], fl:[2,5], type:'tri'},    // 45
-  // ── Octagonal (fases 46-60, 8 direções incluindo diagonais) ─
-  {rows:5, cols:6,  n:10, bl:[2,5], fl:[2,3], type:'oct'},    // 46
-  {rows:5, cols:7,  n:12, bl:[2,5], fl:[2,3], type:'oct'},    // 47
-  {rows:6, cols:7,  n:14, bl:[2,5], fl:[2,4], type:'oct'},    // 48
-  {rows:6, cols:8,  n:16, bl:[2,6], fl:[2,4], type:'oct'},    // 49
-  {rows:7, cols:8,  n:18, bl:[2,6], fl:[2,4], type:'oct'},    // 50
-  {rows:7, cols:9,  n:20, bl:[2,6], fl:[2,4], type:'oct'},    // 51
-  {rows:8, cols:9,  n:22, bl:[2,6], fl:[2,4], type:'oct'},    // 52
-  {rows:8, cols:10, n:24, bl:[2,6], fl:[2,4], type:'oct'},    // 53
-  {rows:9, cols:10, n:26, bl:[2,7], fl:[2,4], type:'oct'},    // 54
-  {rows:9, cols:11, n:28, bl:[2,7], fl:[2,4], type:'oct'},    // 55
-  {rows:10,cols:11, n:30, bl:[2,7], fl:[2,5], type:'oct'},    // 56
-  {rows:10,cols:12, n:32, bl:[2,7], fl:[2,5], type:'oct'},    // 57
-  {rows:11,cols:12, n:35, bl:[2,7], fl:[2,5], type:'oct'},    // 58
-  {rows:11,cols:13, n:38, bl:[2,7], fl:[2,5], type:'oct'},    // 59
-  {rows:12,cols:13, n:40, bl:[2,8], fl:[2,5], type:'oct'},    // 60
-];
+function lerp(a,b,t){return a+(b-a)*t;}
+
+const TYPE_BLOCK=100;
+const GRID_TYPES=['square','hex','tri','oct','ring'];
 
 function cfg(phase){
   if(phase<1) phase=1;
-  if(phase<PHASE_CFG.length) return PHASE_CFG[phase];
-  // Dinâmico além da fase 60: cicla pelos 4 tipos a cada 15 fases
-  const e=phase-60;
-  const seg=Math.floor((e-1)/15);
-  const types=['hex','oct','tri','square'];
-  const t=types[seg%4];
-  const n=Math.min(50+e*3,200);
-  const cols=Math.min(14+Math.floor(e/4),30);
-  const rows=t==='tri'?Math.ceil(cols*.55):Math.ceil(cols*.85);
-  const bl=[2,Math.min(4+Math.floor(e/8),10)];
-  return{rows,cols,n,bl,fl:[2,4],type:t};
+  const block=Math.floor((phase-1)/TYPE_BLOCK);
+  const pos=(phase-1)%TYPE_BLOCK;       // 0-99 within block
+  const t=pos/(TYPE_BLOCK-1);           // 0.0 → 1.0
+  const type=GRID_TYPES[block%GRID_TYPES.length];
+
+  let rows,cols;
+  if(type==='tri'){
+    cols=Math.round(lerp(10,30,t));
+    rows=Math.round(lerp(5,15,t));
+  } else if(type==='ring'){
+    rows=Math.round(lerp(3,8,t));   // number of rings
+    cols=Math.round(lerp(10,28,t)); // sectors per ring
+  } else if(type==='hex'){
+    cols=Math.round(lerp(5,18,t));
+    rows=Math.round(lerp(4,15,t));
+  } else { // square, oct
+    cols=Math.round(lerp(4,20,t));
+    rows=Math.round(lerp(4,18,t));
+  }
+
+  const area=rows*cols;
+  const density=lerp(0.08,0.50,t);
+  const avgBody=lerp(2.5,6,t);
+  const n=Math.max(2,Math.round(area*density/avgBody));
+  const blMax=Math.round(lerp(3,9,t));
+  const flMax=Math.round(lerp(2,5,t));
+  return{rows,cols,n,bl:[2,Math.max(2,blMax)],fl:[2,Math.max(2,flMax)],type};
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -601,15 +549,28 @@ function octNeighbors(r,c,R,C){
     .map(([dr,dc])=>[r+dr,c+dc])
     .filter(([nr,nc])=>nr>=0&&nr<R&&nc>=0&&nc<C);
 }
+function ringNeighbors(r,c,R,C){
+  // left/right wrap around (angular), up/down radial (no wrap)
+  const res=[[r,(c-1+C)%C],[r,(c+1)%C]];
+  if(r>0)   res.push([r-1,c]); // inner ring
+  if(r<R-1) res.push([r+1,c]); // outer ring
+  return res;
+}
 function neighbors(type,r,c,R,C){
   if(type==='hex') return hexNeighbors(r,c,R,C);
   if(type==='tri') return triNeighbors(r,c,R,C);
   if(type==='oct') return octNeighbors(r,c,R,C);
+  if(type==='ring') return ringNeighbors(r,c,R,C);
   return sqNeighbors(r,c,R,C);
 }
 function maxDeg(type){return type==='hex'?6:type==='tri'?3:type==='oct'?8:4;}
 function isBoundary(type,r,c,R,C){return neighbors(type,r,c,R,C).length<maxDeg(type);}
 function allBoundary(type,R,C){
+  if(type==='ring'){
+    const b=[];
+    for(let c=0;c<C;c++) b.push([R-1,c]); // only outer ring
+    return b;
+  }
   const b=[];
   for(let r=0;r<R;r++) for(let c=0;c<C;c++) if(isBoundary(type,r,c,R,C)) b.push([r,c]);
   return b;
@@ -627,14 +588,26 @@ function triCenter(r,c,cs){
   const h=cs*Math.sqrt(3)/2,isUp=(r+c)%2===0;
   return{x:c*cs/2+cs/2,y:r*h+(isUp?h*.62:h*.38)};
 }
+function ringInnerR(R,cs){return Math.max(cs*1.5, cs*R*0.4);}
+function ringOffset(R,cs){return ringInnerR(R,cs)+R*cs+8;}
+function ringCenter(r,c,cs){
+  const R=G.rows,C=G.cols;
+  const inner=ringInnerR(R,cs);
+  const radius=inner+(r+0.5)*cs;
+  const angle=(c+0.5)/C*2*Math.PI-Math.PI/2;
+  const off=ringOffset(R,cs);
+  return{x:off+radius*Math.cos(angle),y:off+radius*Math.sin(angle)};
+}
 function cellCenter(type,r,c,cs){
   if(type==='hex') return hexCenter(r,c,cs);
   if(type==='tri') return triCenter(r,c,cs);
+  if(type==='ring') return ringCenter(r,c,cs);
   return sqCenter(r,c,cs); // square and oct both use square centers
 }
 function canvasSize(type,R,C,cs){
   if(type==='hex'){const s=cs*.52,w=s*Math.sqrt(3),h=s*2;return{w:C*w+w/2+4,h:R*h*.75+h/4+4};}
   if(type==='tri'){const h=cs*Math.sqrt(3)/2;return{w:(C+1)*cs/2+2,h:R*h+h+2};}
+  if(type==='ring'){const off=ringOffset(R,cs);return{w:off*2,h:off*2};}
   return{w:C*cs,h:R*cs};
 }
 function drawGrid(ctx,type,R,C,cs){
@@ -676,6 +649,22 @@ function drawGrid(ctx,type,R,C,cs){
       ctx.lineTo(x,y+cs-t); ctx.lineTo(x,y+t);
       ctx.closePath();ctx.stroke();
     }
+  } else if(type==='ring'){
+    const inner=ringInnerR(R,cs);
+    const off=ringOffset(R,cs);
+    ctx.strokeStyle='rgba(255,100,220,0.09)';
+    ctx.lineWidth=1;
+    for(let r=0;r<=R;r++){
+      const rad=inner+r*cs;
+      ctx.beginPath();ctx.arc(off,off,rad,0,2*Math.PI);ctx.stroke();
+    }
+    for(let c=0;c<C;c++){
+      const angle=(c/C)*2*Math.PI-Math.PI/2;
+      ctx.beginPath();
+      ctx.moveTo(off+inner*Math.cos(angle),off+inner*Math.sin(angle));
+      ctx.lineTo(off+(inner+R*cs)*Math.cos(angle),off+(inner+R*cs)*Math.sin(angle));
+      ctx.stroke();
+    }
   }
 }
 
@@ -715,6 +704,8 @@ function buildSnake(id,type,R,C,bodyOcc,bodyLen,futureLen){
     // Compute exit direction (for virtual cells past exitCell)
     const n=rail.length;
     const dr=rail[n-1][0]-rail[n-2][0],dc=rail[n-1][1]-rail[n-2][1];
+    // Ring exits must be radial (dc===0) so virtual cells go off-grid
+    if(type==='ring' && dc!==0) continue;
     for(let v=1;v<=bodyLen;v++) rail.push([rail[n-1][0]+dr*v,rail[n-1][1]+dc*v]);
 
     return{id,color:COLORS[id%COLORS.length],rail,bodyLen,headIdx:bodyLen-1,exited:false,_anim:null};
@@ -862,7 +853,7 @@ function startPhase(phase){
   G.sliding=false;
   G.history=[];G.showHint=false;G.particles=[];G.animLoop=false;
   document.getElementById('btn-hint').classList.remove('on');
-  const bgMap={hex:'#070f07',tri:'#0f0a04',oct:'#040a10',square:'#0d0b1e'};
+  const bgMap={hex:'#070f07',tri:'#0f0a04',oct:'#040a10',square:'#0d0b1e',ring:'#0f0215'};
   document.body.style.background=bgMap[G.type]||'#0d0b1e';
 
   // Fit canvas (mínimo 16px por célula para manter legibilidade)
@@ -1167,6 +1158,8 @@ function render(){
     grad.addColorStop(0,'#1a1005');grad.addColorStop(1,'#0a0602');
   } else if(type==='oct'){
     grad.addColorStop(0,'#051520');grad.addColorStop(1,'#020810');
+  } else if(type==='ring'){
+    grad.addColorStop(0,'#1a0520');grad.addColorStop(1,'#08020f');
   } else {
     grad.addColorStop(0,'#171130');grad.addColorStop(1,'#08060f');
   }
