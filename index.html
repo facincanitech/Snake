@@ -62,17 +62,101 @@ canvas{display:block;touch-action:none;border-radius:14px}
 .btn:active{transform:scale(.94);opacity:.85}
 .btn-ghost{background:transparent;border:1px solid #2a2a4a;color:#a7a9be;margin-top:2px}
 #stars{font-size:36px;letter-spacing:6px;}
+#win-coins-earned{font-size:20px;font-weight:800;color:#f39c12;min-height:26px;}
+
+/* ── Map Screen ─────────────────────────────────────────── */
+#screen-map{
+  position:fixed;inset:0;z-index:100;background:#0f0e17;
+  display:flex;flex-direction:column;overflow:hidden;
+  transition:opacity .3s;
+}
+#screen-map.hidden{opacity:0;pointer-events:none;}
+#map-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:22px 20px 8px;flex-shrink:0;
+}
+#map-header h1{font-size:21px;font-weight:900;letter-spacing:1px;}
+#coins-hud{
+  display:flex;align-items:center;gap:6px;
+  font-size:16px;font-weight:800;color:#f39c12;
+  background:#1a1a2e;border-radius:20px;padding:6px 14px;
+}
+#map-phases{
+  flex:1;overflow-y:auto;padding:8px 14px 4px;
+  display:grid;grid-template-columns:repeat(4,1fr);gap:10px;
+  align-content:start;
+}
+.phase-tile{
+  background:#1a1a2e;border-radius:14px;
+  padding:10px 4px 8px;display:flex;flex-direction:column;
+  align-items:center;gap:3px;cursor:pointer;
+  transition:transform .12s,border-color .15s;
+  border:2px solid transparent;position:relative;min-height:76px;
+}
+.phase-tile:active{transform:scale(.91);}
+.phase-tile.locked{opacity:.35;cursor:default;pointer-events:none;}
+.phase-tile.current{border-color:#e94560;background:#1f0e17;}
+.phase-tile.done{border-color:#2a2a4a;}
+.pt-num{font-size:19px;font-weight:800;}
+.pt-stars{font-size:12px;letter-spacing:3px;}
+.pt-stars .s-on{color:#f39c12;}
+.pt-stars .s-off{color:#2a2a4a;}
+.pt-chest{position:absolute;top:4px;right:5px;font-size:13px;}
+.pt-lock{font-size:20px;color:#333;margin-top:4px;}
+.pt-type{font-size:9px;color:#555;letter-spacing:1px;text-transform:uppercase;margin-top:1px;}
+
+/* ── Shop ─────────────────────────────────────────────────── */
+#map-shop{
+  flex-shrink:0;padding:8px 14px 22px;
+  border-top:1px solid #1a1a2e;
+}
+#map-shop h3{font-size:11px;color:#555;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;}
+.shop-row{display:flex;gap:10px;}
+.shop-item{
+  flex:1;background:#1a1a2e;border-radius:12px;padding:10px 8px;
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  cursor:pointer;border:2px solid #2a2a4a;transition:border-color .15s,transform .12s;
+}
+.shop-item:active{transform:scale(.93);}
+.shop-item.affordable{border-color:#f39c12;}
+.shop-item.broke{opacity:.4;cursor:default;pointer-events:none;}
+.si-icon{font-size:20px;}
+.si-name{font-size:11px;color:#a7a9be;text-align:center;}
+.si-price{font-size:13px;font-weight:700;color:#f39c12;}
+
+/* ── Chest overlay ───────────────────────────────────────── */
+#ov-chest{z-index:200;}
+#chest-box{
+  background:#1a1a2e;border-radius:22px;
+  padding:28px 40px 24px;display:flex;flex-direction:column;
+  align-items:center;gap:12px;min-width:240px;
+}
+#chest-anim{font-size:68px;animation:chestPop .55s cubic-bezier(.175,.885,.32,1.275);}
+@keyframes chestPop{
+  0%{transform:scale(.2) rotate(-20deg);opacity:0}
+  60%{transform:scale(1.18) rotate(6deg)}
+  100%{transform:scale(1) rotate(0)}
+}
+#chest-reward{font-size:28px;font-weight:900;color:#f39c12;}
+#chest-sub{font-size:14px;color:#a7a9be;}
+
+/* ── Coins in HUD ────────────────────────────────────────── */
+#coins-game{font-size:13px;font-weight:700;color:#f39c12;letter-spacing:1px;}
 </style>
 </head>
 <body>
 
 <div id="hud">
-  <div id="phase-lbl">Fase <b id="pnum">1</b></div>
+  <div style="display:flex;flex-direction:column;gap:3px;">
+    <div id="phase-lbl">Fase <b id="pnum">1</b></div>
+    <div id="coins-game">🪙 0</div>
+  </div>
   <div id="timer-col">
     <div id="timer">2:00</div>
     <div id="tbar-bg"><div id="tbar"></div></div>
   </div>
   <div class="hud-btns">
+    <button id="btn-map"     class="hud-btn" title="Mapa">🗺</button>
     <button id="btn-hint"    class="hud-btn" title="Dica">💡</button>
     <button id="btn-undo"    class="hud-btn" title="Desfazer">↩</button>
     <button id="btn-restart" class="hud-btn" title="Reiniciar">↺</button>
@@ -85,16 +169,204 @@ canvas{display:block;touch-action:none;border-radius:14px}
   <div id="stars">★★★</div>
   <h2>🐍 Escapou!</h2>
   <p id="win-msg">Todas as cobras fugiram!</p>
+  <div id="win-coins-earned"></div>
+  <button class="btn" id="btn-chest-open" style="background:#f39c12;display:none">📦 Abrir Baú!</button>
   <button class="btn" id="btn-next">Próxima Fase ▶</button>
-  <button class="btn btn-ghost" id="btn-retry">Jogar Novamente</button>
+  <button class="btn btn-ghost" id="btn-map-win">◀ Mapa</button>
 </div>
 <div id="ov-lose" class="ov">
   <h2>⏱ Tempo!</h2>
   <p>As cobras ficaram presas...</p>
   <button class="btn" id="btn-retry2">Tentar Novamente</button>
+  <button class="btn btn-ghost" id="btn-map-lose">◀ Mapa</button>
+</div>
+
+<!-- Mapa de Fases -->
+<div id="screen-map">
+  <div id="map-header">
+    <h1>🐍 Snake Escape</h1>
+    <div id="coins-hud">🪙 <span id="coins-map-val">0</span></div>
+  </div>
+  <div id="map-phases"></div>
+  <div id="map-shop">
+    <h3>Loja</h3>
+    <div class="shop-row">
+      <div class="shop-item" id="shop-time" onclick="buyTime()">
+        <div class="si-icon">⏱</div>
+        <div class="si-name">+30 segundos</div>
+        <div class="si-price">🪙 25</div>
+      </div>
+      <div class="shop-item" id="shop-hint" onclick="buyHint()">
+        <div class="si-icon">💡</div>
+        <div class="si-name">Dica Especial</div>
+        <div class="si-price">🪙 15</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Baú -->
+<div id="ov-chest" class="ov">
+  <div id="chest-box">
+    <div id="chest-anim">📦</div>
+    <h2>Baú da Fase!</h2>
+    <div id="chest-reward"></div>
+    <div id="chest-sub"></div>
+    <button class="btn" id="btn-chest-ok">Coletar 🎉</button>
+  </div>
 </div>
 
 <script>
+// ═══════════════════════════════════════════════════════════
+// SAVE SYSTEM
+// ═══════════════════════════════════════════════════════════
+const SAVE={
+  getCoins:()=>parseInt(localStorage.getItem('snake_coins')||'0'),
+  setCoins:c=>localStorage.setItem('snake_coins',c),
+  addCoins:n=>{SAVE.setCoins(SAVE.getCoins()+n);},
+
+  getProgress:()=>JSON.parse(localStorage.getItem('snake_progress')||'{}'),
+  setProgress:p=>localStorage.setItem('snake_progress',JSON.stringify(p)),
+
+  getMaxPhase:()=>parseInt(localStorage.getItem('snake_phase')||'1'),
+  setMaxPhase:p=>localStorage.setItem('snake_phase',p),
+
+  getBonusTime:()=>parseInt(localStorage.getItem('snake_bonusTime')||'0'),
+  setBonusTime:t=>localStorage.setItem('snake_bonusTime',t),
+  useBonusTime:()=>{const t=SAVE.getBonusTime();SAVE.setBonusTime(0);return t;},
+  addBonusTime:n=>{SAVE.setBonusTime(SAVE.getBonusTime()+n);},
+
+  getHintTokens:()=>parseInt(localStorage.getItem('snake_hints')||'0'),
+  setHintTokens:h=>localStorage.setItem('snake_hints',h),
+  addHintTokens:n=>{SAVE.setHintTokens(SAVE.getHintTokens()+n);},
+  useHintToken:()=>{const h=SAVE.getHintTokens();if(h<=0)return false;SAVE.setHintTokens(h-1);return true;},
+};
+
+// ═══════════════════════════════════════════════════════════
+// MAP SCREEN
+// ═══════════════════════════════════════════════════════════
+
+function showMap(){
+  clearInterval(G.timerH);
+  hide('ov-win');hide('ov-lose');hide('ov-chest');
+  buildMapScreen();
+  document.getElementById('screen-map').classList.remove('hidden');
+}
+
+function hideMap(){
+  document.getElementById('screen-map').classList.add('hidden');
+}
+
+function buildMapScreen(){
+  const prog=SAVE.getProgress();
+  const maxPhase=SAVE.getMaxPhase();
+  const coins=SAVE.getCoins();
+
+  document.getElementById('coins-map-val').textContent=coins;
+
+  // Update shop affordability
+  const timeItem=document.getElementById('shop-time');
+  const hintItem=document.getElementById('shop-hint');
+  timeItem.classList.toggle('affordable',coins>=25);
+  timeItem.classList.toggle('broke',coins<25);
+  hintItem.classList.toggle('affordable',coins>=15);
+  hintItem.classList.toggle('broke',coins<15);
+
+  // Build phase grid (show up to maxPhase+3 to give preview of locked phases)
+  const container=document.getElementById('map-phases');
+  const showUpTo=Math.min(Math.max(maxPhase+3,10),45);
+  container.innerHTML='';
+
+  for(let p=1;p<=showUpTo;p++){
+    const tile=document.createElement('div');
+    tile.className='phase-tile';
+    const pdata=prog[p]||{stars:0,chest:false};
+    const locked=p>maxPhase;
+    const current=p===maxPhase;
+    const type=p<=15?'SQ':p<=30?'HEX':'HEX+';
+
+    if(locked){
+      tile.classList.add('locked');
+      tile.innerHTML=`<div class="pt-num" style="color:#333">${p}</div><div class="pt-lock">🔒</div>`;
+    } else {
+      if(current) tile.classList.add('current');
+      else tile.classList.add('done');
+
+      const stars=pdata.stars||0;
+      const starHTML='<span class="s-on">'+'★'.repeat(stars)+'</span>'
+                    +'<span class="s-off">'+'☆'.repeat(3-stars)+'</span>';
+      const chestBadge=(stars===3&&!pdata.chest)?'<div class="pt-chest">📦</div>':'';
+      tile.innerHTML=`
+        ${chestBadge}
+        <div class="pt-num">${p}</div>
+        <div class="pt-stars">${starHTML}</div>
+        <div class="pt-type">${type}</div>`;
+      tile.addEventListener('click',()=>{hideMap();startPhase(p);});
+    }
+    container.appendChild(tile);
+  }
+
+  // Scroll to current phase
+  setTimeout(()=>{
+    const tiles=container.querySelectorAll('.phase-tile');
+    const cur=tiles[maxPhase-1];
+    if(cur) cur.scrollIntoView({block:'center',behavior:'smooth'});
+  },50);
+}
+
+function buyTime(){
+  if(SAVE.getCoins()<25) return;
+  SAVE.addCoins(-25);
+  SAVE.addBonusTime(30);
+  buildMapScreen();
+  // Brief visual feedback
+  const btn=document.getElementById('shop-time');
+  btn.style.borderColor='#2ecc71';
+  setTimeout(()=>btn.style.borderColor='',600);
+}
+
+function buyHint(){
+  if(SAVE.getCoins()<15) return;
+  SAVE.addCoins(-15);
+  SAVE.addHintTokens(1);
+  buildMapScreen();
+  const btn=document.getElementById('shop-hint');
+  btn.style.borderColor='#2ecc71';
+  setTimeout(()=>btn.style.borderColor='',600);
+}
+
+// ═══════════════════════════════════════════════════════════
+// CHEST
+// ═══════════════════════════════════════════════════════════
+const CHEST_REWARDS=[
+  {type:'coins',amount:20,label:'+20 moedas',icon:'🪙'},
+  {type:'coins',amount:30,label:'+30 moedas',icon:'🪙'},
+  {type:'coins',amount:40,label:'+40 moedas',icon:'🪙🪙'},
+  {type:'time', amount:30,label:'+30 segundos',icon:'⏱'},
+  {type:'time', amount:60,label:'+60 segundos',icon:'⏱⏱'},
+  {type:'hints',amount:2, label:'+2 dicas',icon:'💡'},
+];
+
+function openChest(phase){
+  const reward=CHEST_REWARDS[Math.floor(Math.random()*CHEST_REWARDS.length)];
+
+  // Apply reward
+  if(reward.type==='coins') SAVE.addCoins(reward.amount);
+  else if(reward.type==='time') SAVE.addBonusTime(reward.amount);
+  else if(reward.type==='hints') SAVE.addHintTokens(reward.amount);
+
+  // Mark chest as claimed
+  const prog=SAVE.getProgress();
+  if(prog[phase]) prog[phase].chest=true;
+  SAVE.setProgress(prog);
+
+  // Show popup
+  document.getElementById('chest-anim').textContent='🎁';
+  document.getElementById('chest-reward').textContent=reward.icon+' '+reward.label;
+  document.getElementById('chest-sub').textContent='Recompensa desbloqueada!';
+  show('ov-chest');
+}
+
 // ═══════════════════════════════════════════════════════════
 // CONSTANTS
 // ═══════════════════════════════════════════════════════════
@@ -286,47 +558,62 @@ function bodyOf(sn){
 function isInGrid(r,c,R,C){return r>=0&&r<R&&c>=0&&c<C;}
 
 function solvable(snakes,R,C){
-  const rails=snakes.map(s=>s.rail);
-  const bls=snakes.map(s=>s.bodyLen);
+  // Greedy simulation: repeatedly slide any free snake out.
+  // Moving a free snake only frees cells — never blocks others.
+  // So greedy finds a solution iff one exists. O(n²), no state-space limit.
   const n=snakes.length;
-  const initH=snakes.map(s=>s.headIdx);
-  const goal=rails.map(r=>r.length-1);
+  const heads=[...snakes.map(s=>s.headIdx)];
+  const exited=new Array(n).fill(false);
 
-  function bodyOfH(i,heads){
-    const hi=heads[i],bl=bls[i];
-    return rails[i].slice(Math.max(0,hi-bl+1),hi+1).filter(([r,c])=>isInGrid(r,c,R,C));
+  function cellsOf(i){
+    const hi=heads[i],bl=snakes[i].bodyLen,rail=snakes[i].rail;
+    const cells=[];
+    for(let j=Math.max(0,hi-bl+1);j<=hi;j++){
+      const[r,c]=rail[j];
+      if(isInGrid(r,c,R,C)) cells.push(key(r,c));
+    }
+    return cells;
   }
-  function occMap(heads){
+  function buildOcc(){
     const m=new Map();
     for(let i=0;i<n;i++){
-      if(heads[i]>=rails[i].length) continue;
-      for(const [r,c] of bodyOfH(i,heads)) m.set(key(r,c),i);
+      if(exited[i]) continue;
+      for(const k of cellsOf(i)) m.set(k,i);
     }
     return m;
   }
-
-  const stateKey=h=>h.join(',');
-  const queue=[initH];
-  const vis=new Set([stateKey(initH)]);
-
-  while(queue.length){
-    const heads=queue.shift();
-    if(heads.every((h,i)=>h>=goal[i])) return true;
-    for(let i=0;i<n;i++){
-      if(heads[i]>=rails[i].length-1) continue;
+  function slideOut(i){
+    const rail=snakes[i].rail;
+    // Advance head step by step until fully out
+    while(heads[i]<rail.length-1){
       const ni=heads[i]+1;
-      const[nr,nc]=rails[i][ni];
-      const off=!isInGrid(nr,nc,R,C);
-      const occ=occMap(heads);
-      if(off||!occ.has(key(nr,nc))||occ.get(key(nr,nc))===i){
-        const nh=[...heads];nh[i]=ni;
-        const k=stateKey(nh);
-        if(!vis.has(k)){vis.add(k);queue.push(nh);}
+      const[nr,nc]=rail[ni];
+      if(isInGrid(nr,nc,R,C)){
+        const occ=buildOcc();
+        const k2=key(nr,nc);
+        if(occ.has(k2)&&occ.get(k2)!==i) return false; // blocked mid-slide
       }
+      heads[i]=ni;
     }
-    if(snakes.length>8||vis.size>120000) return true; // BFS inviável para muitas cobras
+    exited[i]=true;
+    return true;
   }
-  return false;
+
+  let progress=true;
+  while(progress){
+    progress=false;
+    const occ=buildOcc();
+    for(let i=0;i<n;i++){
+      if(exited[i]) continue;
+      const rail=snakes[i].rail;
+      if(heads[i]>=rail.length-1){exited[i]=true;progress=true;continue;}
+      const ni=heads[i]+1;
+      const[nr,nc]=rail[ni];
+      const free=!isInGrid(nr,nc,R,C)||!occ.has(key(nr,nc))||occ.get(key(nr,nc))===i;
+      if(free){slideOut(i);progress=true;}
+    }
+  }
+  return exited.every(Boolean);
 }
 
 function generateLevel(phase){
@@ -409,7 +696,8 @@ function startPhase(phase){
   const level=generateLevel(phase);
   G.snakes=level.snakes;
   G.rows=level.rows;G.cols=level.cols;G.type=level.type;
-  G.phase=phase;G.win=false;G.lose=false;G.flashId=-1;
+  G.phase=phase;G.win=false;G.lose=false;G.flashId=-1;G.chestPending=false;
+  hideMap();
 
   G.sliding=false;
   G.history=[];G.showHint=false;G.particles=[];G.animLoop=false;
@@ -429,7 +717,9 @@ function startPhase(phase){
   document.getElementById('pnum').textContent=phase;
   const glbl=document.getElementById('grid-lbl');if(glbl) glbl.textContent=G.type;
 
-  G.timer=120;G.timerMax=120;
+  const bonus=SAVE.useBonusTime();
+  G.timer=120+bonus;G.timerMax=120+bonus;
+  updateCoinsHUD();
   updateTimerUI();
   G.timerH=setInterval(tick,1000);
   render();
@@ -555,12 +845,38 @@ function checkWin(){
   if(G.snakes.every(s=>s.exited)){
     clearInterval(G.timerH);G.win=true;G.showHint=false;
     const t=G.timer;
-    const s=getStars(t,G.timerMax);
-    document.getElementById('stars').textContent='★'.repeat(s)+'☆'.repeat(3-s);
+    const stars=getStars(t,G.timerMax);
+
+    // Save best stars, unlock next phase
+    const prog=SAVE.getProgress();
+    const prev=prog[G.phase]||{stars:0,chest:false};
+    prog[G.phase]={stars:Math.max(prev.stars,stars),chest:prev.chest};
+    SAVE.setProgress(prog);
+    if(G.phase>=SAVE.getMaxPhase()) SAVE.setMaxPhase(G.phase+1);
+
+    // Coins reward
+    const coinsEarned=[0,5,10,20][stars];
+    SAVE.addCoins(coinsEarned);
+    updateCoinsHUD();
+
+    // Chest eligibility: 3 stars this run AND not yet claimed
+    G.chestPending=stars===3&&!prev.chest;
+
+    // Update overlay
+    document.getElementById('stars').textContent='★'.repeat(stars)+'☆'.repeat(3-stars);
     document.getElementById('win-msg').textContent=
-      `Todas escaparam! Sobrou ${Math.floor(t/60)}:${String(t%60).padStart(2,'0')}`;
+      `Sobrou ${Math.floor(t/60)}:${String(t%60).padStart(2,'0')}`;
+    document.getElementById('win-coins-earned').textContent=
+      coinsEarned?`+${coinsEarned} 🪙`:'';
+    document.getElementById('btn-chest-open').style.display=G.chestPending?'':'none';
+
     setTimeout(()=>show('ov-win'),500);
   }
+}
+
+function updateCoinsHUD(){
+  const c=SAVE.getCoins();
+  document.getElementById('coins-game').textContent='🪙 '+c;
 }
 
 // ── Estrelas ───────────────────────────────────────────────
@@ -765,16 +1081,26 @@ window.addEventListener('DOMContentLoaded',()=>{
   G.canvas.addEventListener('click',onTap);
   G.canvas.addEventListener('touchstart',onTap,{passive:false});
 
-  document.getElementById('btn-next')   .addEventListener('click',()=>startPhase(G.phase+1));
-  document.getElementById('btn-retry')  .addEventListener('click',()=>startPhase(G.phase));
+  document.getElementById('btn-next')   .addEventListener('click',()=>{hide('ov-win');startPhase(G.phase+1);});
   document.getElementById('btn-retry2') .addEventListener('click',()=>startPhase(G.phase));
   document.getElementById('btn-restart').addEventListener('click',()=>startPhase(G.phase));
   document.getElementById('btn-hint')   .addEventListener('click',toggleHint);
   document.getElementById('btn-undo')   .addEventListener('click',undo);
+  document.getElementById('btn-map')    .addEventListener('click',showMap);
+  document.getElementById('btn-map-win').addEventListener('click',showMap);
+  document.getElementById('btn-map-lose').addEventListener('click',showMap);
+  document.getElementById('btn-chest-open').addEventListener('click',()=>{
+    hide('ov-win');
+    openChest(G.phase);
+  });
+  document.getElementById('btn-chest-ok').addEventListener('click',()=>{
+    hide('ov-chest');
+    showMap();
+  });
 
   window.addEventListener('resize',()=>startPhase(G.phase));
 
-  startPhase(1);
+  showMap();
 });
 </script>
 </body>
