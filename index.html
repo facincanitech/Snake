@@ -144,6 +144,10 @@ canvas{display:block;touch-action:none;border-radius:18px;box-shadow:0 8px 40px 
 .pc-hx.pc-current{box-shadow:0 0 32px #10b98144,0 12px 40px rgba(0,0,0,.5);}
 .pc-hxp{background:linear-gradient(135deg,#451a03,#713f12);border-color:#f97316;}
 .pc-hxp.pc-current{box-shadow:0 0 32px #f9731644,0 12px 40px rgba(0,0,0,.5);}
+.pc-tri{background:linear-gradient(135deg,#3b1f00,#5c3008);border-color:#d97706;}
+.pc-tri.pc-current{border-color:#fbbf24;box-shadow:0 0 32px #fbbf2444,0 12px 40px rgba(0,0,0,.5);}
+.pc-oct{background:linear-gradient(135deg,#042030,#063048);border-color:#0891b2;}
+.pc-oct.pc-current{border-color:#22d3ee;box-shadow:0 0 32px #22d3ee44,0 12px 40px rgba(0,0,0,.5);}
 
 .pc-num{
   font-size:52px;font-weight:900;line-height:1;opacity:.95;
@@ -173,6 +177,8 @@ canvas{display:block;touch-action:none;border-radius:18px;box-shadow:0 8px 40px 
 .pc-sq.pc-current{--glow:#6366f155;animation:pcPulse 3s ease-in-out infinite;}
 .pc-hx.pc-current{--glow:#10b98155;animation:pcPulse 3s ease-in-out infinite;}
 .pc-hxp.pc-current{--glow:#f9731655;animation:pcPulse 3s ease-in-out infinite;}
+.pc-tri.pc-current{--glow:#fbbf2455;animation:pcPulse 3s ease-in-out infinite;}
+.pc-oct.pc-current{--glow:#22d3ee55;animation:pcPulse 3s ease-in-out infinite;}
 
 /* ── Play button ─────────────────────────────────────────── */
 #btn-play-map{
@@ -357,8 +363,19 @@ function hideMap(){
   document.getElementById('screen-map').classList.add('hidden');
 }
 
-function phaseTypeClass(p){return p<=15?'sq':p<=30?'hx':'hxp';}
-function phaseTypeName(p){return p<=15?'Square':p<=30?'Hexagonal':'Hex Pro';}
+function phaseTypeClass(p){
+  if(p<=15) return 'sq';
+  if(p<=30) return 'hx';
+  if(p<=45) return 'tri';
+  if(p<=60) return 'oct';
+  // 61+: cycle by segment of 15
+  const seg=Math.floor((p-61)/15);
+  return ['hx','oct','tri','sq'][seg%4];
+}
+function phaseTypeName(p){
+  const t=phaseTypeClass(p);
+  return {sq:'Square',hx:'Hexagonal',tri:'Triangular',oct:'Octagonal'}[t]||'Infinito';
+}
 
 function buildMapScreen(){
   const prog=SAVE.getProgress();
@@ -511,16 +528,53 @@ const PHASE_CFG = [
   {rows:15,cols:15, n:36, bl:[2,6], fl:[2,4], type:'hex'},    // 28 —225c,36×4=144 (64%)
   {rows:15,cols:16, n:40, bl:[2,6], fl:[2,4], type:'hex'},    // 29 —240c,40×4=160 (67%)
   {rows:16,cols:16, n:44, bl:[2,6], fl:[2,4], type:'hex'},    // 30 —256c,44×4=176 (69%)
+  // ── Triangular (fases 31-45, cobra se move em 3 direções) ─
+  {rows:8, cols:14, n:8,  bl:[2,4], fl:[2,3], type:'tri'},    // 31
+  {rows:8, cols:16, n:10, bl:[2,4], fl:[2,3], type:'tri'},    // 32
+  {rows:9, cols:16, n:11, bl:[2,4], fl:[2,3], type:'tri'},    // 33
+  {rows:9, cols:18, n:12, bl:[2,5], fl:[2,3], type:'tri'},    // 34
+  {rows:10,cols:18, n:13, bl:[2,5], fl:[2,4], type:'tri'},    // 35
+  {rows:10,cols:20, n:14, bl:[2,5], fl:[2,4], type:'tri'},    // 36
+  {rows:10,cols:20, n:15, bl:[2,5], fl:[2,4], type:'tri'},    // 37
+  {rows:11,cols:20, n:16, bl:[2,5], fl:[2,4], type:'tri'},    // 38
+  {rows:11,cols:22, n:17, bl:[2,6], fl:[2,4], type:'tri'},    // 39
+  {rows:11,cols:22, n:18, bl:[2,6], fl:[2,4], type:'tri'},    // 40
+  {rows:12,cols:22, n:19, bl:[2,6], fl:[2,4], type:'tri'},    // 41
+  {rows:12,cols:24, n:20, bl:[2,6], fl:[2,4], type:'tri'},    // 42
+  {rows:12,cols:24, n:21, bl:[2,6], fl:[2,5], type:'tri'},    // 43
+  {rows:13,cols:24, n:22, bl:[2,6], fl:[2,5], type:'tri'},    // 44
+  {rows:13,cols:26, n:24, bl:[2,7], fl:[2,5], type:'tri'},    // 45
+  // ── Octagonal (fases 46-60, 8 direções incluindo diagonais) ─
+  {rows:5, cols:6,  n:10, bl:[2,5], fl:[2,3], type:'oct'},    // 46
+  {rows:5, cols:7,  n:12, bl:[2,5], fl:[2,3], type:'oct'},    // 47
+  {rows:6, cols:7,  n:14, bl:[2,5], fl:[2,4], type:'oct'},    // 48
+  {rows:6, cols:8,  n:16, bl:[2,6], fl:[2,4], type:'oct'},    // 49
+  {rows:7, cols:8,  n:18, bl:[2,6], fl:[2,4], type:'oct'},    // 50
+  {rows:7, cols:9,  n:20, bl:[2,6], fl:[2,4], type:'oct'},    // 51
+  {rows:8, cols:9,  n:22, bl:[2,6], fl:[2,4], type:'oct'},    // 52
+  {rows:8, cols:10, n:24, bl:[2,6], fl:[2,4], type:'oct'},    // 53
+  {rows:9, cols:10, n:26, bl:[2,7], fl:[2,4], type:'oct'},    // 54
+  {rows:9, cols:11, n:28, bl:[2,7], fl:[2,4], type:'oct'},    // 55
+  {rows:10,cols:11, n:30, bl:[2,7], fl:[2,5], type:'oct'},    // 56
+  {rows:10,cols:12, n:32, bl:[2,7], fl:[2,5], type:'oct'},    // 57
+  {rows:11,cols:12, n:35, bl:[2,7], fl:[2,5], type:'oct'},    // 58
+  {rows:11,cols:13, n:38, bl:[2,7], fl:[2,5], type:'oct'},    // 59
+  {rows:12,cols:13, n:40, bl:[2,8], fl:[2,5], type:'oct'},    // 60
 ];
 
 function cfg(phase){
   if(phase<1) phase=1;
   if(phase<PHASE_CFG.length) return PHASE_CFG[phase];
-  // Dinâmico além da fase 30: hex crescendo
-  const e=phase-30;
-  const n=Math.min(50+e*3,120);
-  const side=Math.min(16+Math.floor(e/4),22);
-  return{rows:side,cols:side,n,bl:[2,3],fl:[2,3],type:'hex'};
+  // Dinâmico além da fase 60: cicla pelos 4 tipos a cada 15 fases
+  const e=phase-60;
+  const seg=Math.floor((e-1)/15);
+  const types=['hex','oct','tri','square'];
+  const t=types[seg%4];
+  const n=Math.min(50+e*3,200);
+  const cols=Math.min(14+Math.floor(e/4),30);
+  const rows=t==='tri'?Math.ceil(cols*.55):Math.ceil(cols*.85);
+  const bl=[2,Math.min(4+Math.floor(e/8),10)];
+  return{rows,cols,n,bl,fl:[2,4],type:t};
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -542,12 +596,18 @@ function triNeighbors(r,c,R,C){
   if(!isUp&&r>0)  res.push([r-1,c]);
   return res.filter(([nr,nc])=>nc>=0&&nc<C);
 }
+function octNeighbors(r,c,R,C){
+  return [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]]
+    .map(([dr,dc])=>[r+dr,c+dc])
+    .filter(([nr,nc])=>nr>=0&&nr<R&&nc>=0&&nc<C);
+}
 function neighbors(type,r,c,R,C){
   if(type==='hex') return hexNeighbors(r,c,R,C);
   if(type==='tri') return triNeighbors(r,c,R,C);
+  if(type==='oct') return octNeighbors(r,c,R,C);
   return sqNeighbors(r,c,R,C);
 }
-function maxDeg(type){return type==='hex'?6:type==='tri'?3:4;}
+function maxDeg(type){return type==='hex'?6:type==='tri'?3:type==='oct'?8:4;}
 function isBoundary(type,r,c,R,C){return neighbors(type,r,c,R,C).length<maxDeg(type);}
 function allBoundary(type,R,C){
   const b=[];
@@ -570,7 +630,7 @@ function triCenter(r,c,cs){
 function cellCenter(type,r,c,cs){
   if(type==='hex') return hexCenter(r,c,cs);
   if(type==='tri') return triCenter(r,c,cs);
-  return sqCenter(r,c,cs);
+  return sqCenter(r,c,cs); // square and oct both use square centers
 }
 function canvasSize(type,R,C,cs){
   if(type==='hex'){const s=cs*.52,w=s*Math.sqrt(3),h=s*2;return{w:C*w+w/2+4,h:R*h*.75+h/4+4};}
@@ -601,6 +661,19 @@ function drawGrid(ctx,type,R,C,cs){
       ctx.beginPath();
       if(isUp){ctx.moveTo(bx,by+h);ctx.lineTo(bx+cs,by+h);ctx.lineTo(bx+cs/2,by);}
       else     {ctx.moveTo(bx,by); ctx.lineTo(bx+cs,by);  ctx.lineTo(bx+cs/2,by+h);}
+      ctx.closePath();ctx.stroke();
+    }
+  } else if(type==='oct'){
+    // Octagonal cells: squares with cut corners
+    const t=cs*0.28;
+    ctx.strokeStyle='rgba(100,200,255,0.07)';
+    for(let r=0;r<R;r++) for(let c=0;c<C;c++){
+      const x=c*cs,y=r*cs;
+      ctx.beginPath();
+      ctx.moveTo(x+t,y);    ctx.lineTo(x+cs-t,y);
+      ctx.lineTo(x+cs,y+t); ctx.lineTo(x+cs,y+cs-t);
+      ctx.lineTo(x+cs-t,y+cs); ctx.lineTo(x+t,y+cs);
+      ctx.lineTo(x,y+cs-t); ctx.lineTo(x,y+t);
       ctx.closePath();ctx.stroke();
     }
   }
@@ -789,7 +862,8 @@ function startPhase(phase){
   G.sliding=false;
   G.history=[];G.showHint=false;G.particles=[];G.animLoop=false;
   document.getElementById('btn-hint').classList.remove('on');
-  document.body.style.background=G.type==='hex'?'#0b150b':'#0f0e17';
+  const bgMap={hex:'#070f07',tri:'#0f0a04',oct:'#040a10',square:'#0d0b1e'};
+  document.body.style.background=bgMap[G.type]||'#0d0b1e';
 
   // Fit canvas (mínimo 16px por célula para manter legibilidade)
   const maxW=Math.min(window.innerWidth-28,520);
@@ -1089,6 +1163,10 @@ function render(){
   const grad=ctx.createRadialGradient(cx,cy*.7,0,cx,cy,Math.max(canvas.width,canvas.height)*.7);
   if(type==='hex'){
     grad.addColorStop(0,'#0d2218');grad.addColorStop(1,'#060e0a');
+  } else if(type==='tri'){
+    grad.addColorStop(0,'#1a1005');grad.addColorStop(1,'#0a0602');
+  } else if(type==='oct'){
+    grad.addColorStop(0,'#051520');grad.addColorStop(1,'#020810');
   } else {
     grad.addColorStop(0,'#171130');grad.addColorStop(1,'#08060f');
   }
